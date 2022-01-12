@@ -22,10 +22,12 @@ shinyUI(fluidPage(
       ),
       #show the imported CSV
       mainPanel(
-        tableOutput("instruction_data"),
         textOutput("instruction_stats"),
-        tableOutput("outreach_data"),
-        textOutput("outreach_stats")
+        textOutput("outreach_stats"),
+        textOutput("consults_stats"),
+        tableOutput("instruction_data"),
+        tableOutput("outreach_data")
+        
       )
     )
 ))

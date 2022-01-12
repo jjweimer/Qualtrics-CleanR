@@ -128,6 +128,41 @@ shinyServer(function(input, output) {
     
   })
   
+  ## text summary stats for Consults
+  output$consults_stats <- renderPrint({ 
+    
+    inFile <- input$file1
+    
+    if (is.null(inFile))
+      return(NULL)
+    
+    #read in the user data
+    user_data <- read.csv(inFile$datapath, header = input$header)
+    
+    #now clean data for consults_data
+    consults <- dat_orig %>% select(Q3,Q38,Q39,Q40,Q42,Q43,Q44,Q45)
+    consults <- consults[consults$Q3 == 'Consultation',]
+    colnames(consults) <- c("service","date","location","department","num_consult",
+                            "category","time_spent","status")
+    #ensure date data type
+    #consults$date <- mdy(consults$date)
+    #make num_consult numeric
+    consults$num_consult <- as.numeric(consults$num_consult)
+    #some NAs, lets make these 1 by default
+    consults$num_consult[is.na(consults$num_consult)] <- 1
+    
+    #now the text render part
+    #how many consults in what date range?
+    date_min <- consults$date[1]
+    date_max <- consults$date[nrow(consults)]
+    num_consults <- nrow(consults)
+    num_people_consulted <- sum(consults$num_consult)
+    
+    print(paste("There were",num_consults,"consults from",date_min,"to",date_max, 
+                "reaching",num_people_consulted, "people")) 
+    
+  })
+  
   output$contents <- renderTable({
     # input$file1 will be NULL initially. After the user selects
     # and uploads a file, it will be a data frame with 'name',
