@@ -79,6 +79,37 @@ shinyServer(function(input, output) {
     #some NAs, lets make these 1 by default
     consults$num_consult[is.na(consults$num_consult)] <- 1
     
+    #now deal with the departments. Lots of departments have multiple versions
+    #of the dept name in the file (example, Non-UCSD and Not UCSD or 
+    #Communication and Communications). This will try to manually resolve these
+    #This is a bit delicate since it can't account for every typo
+    
+    
+    #fix communications
+    consults$department[consults$department %in% c("Communication","Communications")] <- "Communications"
+    
+    #fix non-ucsd affiliations
+    consults$department[consults$department %in%  c("Non-UCSD (recent grad)", "Not UCSD", "UCSD Alumni")] <- "Non-UCSD"
+    #%in%  c("Non-UCSD (recent grad)", "Not UCSD", "UCSD Alumni")
+    
+    #fix Data Science
+    consults$department[consults$department %in% c("Data science", "Data Science & Engineering")] <- "Data Science"
+    #%in%  c("Data science", "Data Science & Engineering")
+    
+    #fix GPS
+    #c("GPS", "Global Policy and Strategy", "Global policy and Strategy")
+    #to "School of Global Policy and Strategy"
+    consults$department[consults$department %in% c("GPS", "Global Policy and Strategy", "Global policy and Strategy")] <- "School of Global Policy and Strategy"
+    
+    #fix Business Analytics
+    #c("Business Intelligence Analysis (Extension)", "Business Intelligence Analysis/Extension", "Business Analytics")
+    #to "Business Intelligence Analysis"
+    consults$department[consults$department %in% c("Business Intelligence Analysis (Extension)", "Business Intelligence Analysis/Extension", "Business Analytics")] <- "Business Intelligence Analysis"
+    
+    #fix medicine
+    consults$department[consults$department %in% c("School of Medicine","Medicine ", "Med School")] <- "Medicine"
+    
+    
     return(consults)
   })
   
@@ -168,9 +199,17 @@ shinyServer(function(input, output) {
   
   output$about_text <- renderText({
     
-    "This is an applet to clean user uploaded Qualtrics Data. 
-    Developed by Joshua Weimer for the UCSD Data and GIS Lab."
+    "This is an applet to clean user uploaded Qualtrics Data.
+    To use the app, upload a Qualtircs csv using the left sidebar. 
+    Summary statistics, plots and tables will be generated for
+    you automatically."
   })
+  
+  output$dev_text <- renderText({
+    
+    "Developed by Joshua Weimer for the UCSD Data and GIS Lab."
+  })
+  #Developed by Joshua Weimer for the UCSD Data and GIS Lab.
   
   
   #############################################

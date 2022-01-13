@@ -29,7 +29,7 @@ shinyUI(fluidPage(
                     tabPanel("Instruction",textOutput("instruction_stats"),tableOutput("instruction_data")),
                     tabPanel("Outreach",textOutput("outreach_stats"),tableOutput("outreach_data")),
                     tabPanel("Consults",textOutput("consults_stats"), plotlyOutput("consults_graph")),
-                    tabPanel("About",textOutput("about_text")))
+                    tabPanel("About",textOutput("about_text"), textOutput("dev_text")))
         
         
       )
