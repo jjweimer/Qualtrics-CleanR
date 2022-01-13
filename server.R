@@ -182,7 +182,7 @@ shinyServer(function(input, output) {
     
     fig <- plot_ly(x = consults$num_consult, 
                    y = consults$department, 
-                   type = 'bar', orientation = 'h', height=800)  %>% 
+                   type = 'bar', orientation = 'h', height=1200)  %>% 
       layout(yaxis = list(categoryorder = "total ascending"))
   })
   
