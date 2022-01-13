@@ -1,6 +1,7 @@
 library(shiny)
 library(lubridate)
 library(dplyr)
+library(plotly)
 
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
@@ -8,7 +9,7 @@ shinyUI(fluidPage(
     # Application title
     titlePanel("Qualtrics Data Cleaner"),
 
-    # Sidebar with a slider input for number of bins
+    # Sidebar
     sidebarLayout(
       sidebarPanel(
         fileInput("file1", "Choose CSV File",
@@ -20,13 +21,16 @@ shinyUI(fluidPage(
         tags$hr(),
         checkboxInput("header", "Header", TRUE)
       ),
-      #show the imported CSV
+      
+      
+      #show the tables, stats
       mainPanel(
-        textOutput("instruction_stats"),
-        textOutput("outreach_stats"),
-        textOutput("consults_stats"),
-        tableOutput("instruction_data"),
-        tableOutput("outreach_data")
+        tabsetPanel(type='tabs',
+                    tabPanel("Instruction",textOutput("instruction_stats"),tableOutput("instruction_data")),
+                    tabPanel("Outreach",textOutput("outreach_stats"),tableOutput("outreach_data")),
+                    tabPanel("Consults",textOutput("consults_stats"), plotlyOutput("consults_graph")),
+                    tabPanel("About",textOutput("about_text")))
+        
         
       )
     )
