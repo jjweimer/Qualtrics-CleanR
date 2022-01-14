@@ -18,7 +18,7 @@ shinyServer(function(input, output) {
       return(NULL)
     
     #read in the user data
-    user_data <- read.csv(inFile$datapath, header = input$header)
+    user_data <- read.csv(inFile$datapath)
     
     #now clean data for instruction_data
     instruction <- user_data %>% select(Q3, Q16, Q192.1, Q17, Q21)
@@ -41,7 +41,7 @@ shinyServer(function(input, output) {
       return(NULL)
     
     #read in the user data
-    user_data <- read.csv(inFile$datapath, header = input$header)
+    user_data <- read.csv(inFile$datapath)
     
     #now clean data for outreach_data
     outreach <- user_data %>% select(Q3, Q156, Q198, Q174, Q184, 
@@ -65,7 +65,7 @@ shinyServer(function(input, output) {
       return(NULL)
     
     #read in the user data
-    user_data <- read.csv(inFile$datapath, header = input$header)
+    user_data <- read.csv(inFile$datapath)
     
     #now clean data for consults_data
     consults <- user_data %>% select(Q3,Q38,Q39,Q40,Q42,Q43,Q44,Q45)
@@ -89,7 +89,7 @@ shinyServer(function(input, output) {
     consults$department[consults$department %in% c("Communication","Communications")] <- "Communications"
     
     #fix non-ucsd affiliations
-    consults$department[consults$department %in%  c("Non-UCSD (recent grad)", "Not UCSD", "UCSD Alumni")] <- "Non-UCSD"
+    consults$department[consults$department %in% c("Non-UCSD (recent grad)", "Not UCSD", "UCSD Alumni")] <- "Non-UCSD"
     #%in%  c("Non-UCSD (recent grad)", "Not UCSD", "UCSD Alumni")
     
     #fix Data Science
@@ -99,7 +99,7 @@ shinyServer(function(input, output) {
     #fix GPS
     #c("GPS", "Global Policy and Strategy", "Global policy and Strategy")
     #to "School of Global Policy and Strategy"
-    consults$department[consults$department %in% c("GPS", "Global Policy and Strategy", "Global policy and Strategy")] <- "School of Global Policy and Strategy"
+    consults$department[consults$department %in% c("GPS", "Global Policy and Strategy", "Global Policy and Strategy","Global policy and Strategy")] <- "School of Global Policy and Strategy"
     
     #fix Business Analytics
     #c("Business Intelligence Analysis (Extension)", "Business Intelligence Analysis/Extension", "Business Analytics")
@@ -108,7 +108,6 @@ shinyServer(function(input, output) {
     
     #fix medicine
     consults$department[consults$department %in% c("School of Medicine","Medicine ", "Med School")] <- "Medicine"
-    
     
     return(consults)
   })
@@ -124,7 +123,7 @@ shinyServer(function(input, output) {
     #read in the user data
     instruction_data <- Sortie_instruction() #return Sortie function
     
-    #returns last line of output
+    #returns df
     return(instruction_data)
     
   })
@@ -135,7 +134,7 @@ shinyServer(function(input, output) {
     #read in the user data
     outreach <- Sortie_outreach() #return Sortie function
     
-    #returns last line of output
+    #returns df
     return(outreach)
   })
   
