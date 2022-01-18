@@ -226,6 +226,11 @@ shinyServer(function(input, output) {
   #consults department counts
   output$consults_graph <- renderPlotly({
     
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
     #read in the user data
     consults <- Sortie_consults() #return Sortie function
     consults <- consults[consults$dept_consult_count > 1,]
@@ -247,14 +252,16 @@ shinyServer(function(input, output) {
         config(displayModeBar = F)
       
     return(fig)
-    
-    
-  
   })
   
   ## instruction over time
   output$instruction_time_plot <- renderPlotly({
   
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
     #read in df
     instruction <- Sortie_instruction()
     
@@ -287,7 +294,5 @@ shinyServer(function(input, output) {
     return(fig1)
   })
   
-  
-  
-  
+
 })
