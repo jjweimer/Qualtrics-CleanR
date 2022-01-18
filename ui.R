@@ -2,6 +2,7 @@ library(shiny)
 library(lubridate)
 library(dplyr)
 library(plotly)
+library(ggplot2)
 library(shinythemes)
 
 # Define UI for application that draws a histogram
@@ -26,20 +27,27 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                   Upload a Qualtrics .csv file using the button above. 
                   Summary statistics, plots and tables will be generated for
                   you automatically."),
-        tags$hr(),
-        helpText("Developed by Joshua Weimer for the UCSD Data and GIS Lab.")
+        tags$hr() #,
+        #helpText("Developed by Joshua Weimer for the UCSD Data and GIS Lab.")
         
       ), #end sidebar
       
       #Main Panel
       mainPanel(
         tabsetPanel(type='tabs',
-                    tabPanel("Instruction",textOutput("instruction_stats"),
-                             tableOutput("instruction_data")),
-                    tabPanel("Outreach",textOutput("outreach_stats"),
-                             tableOutput("outreach_data")),
-                    tabPanel("Consults",textOutput("consults_stats"), 
-                             plotlyOutput("consults_graph")))
+                    tabPanel("Instruction",
+                             #tableOutput("instruction_data"),
+                             textOutput("instruction_stats"),
+                             tags$hr(),
+                             plotlyOutput("instruction_time_plot")),
+                    tabPanel("Outreach",
+                             tableOutput("outreach_data"),
+                             textOutput("outreach_stats")),
+                    tabPanel("Consults",
+                             textOutput("consults_stats"),
+                             tags$hr(),
+                             plotlyOutput("consults_graph"))
+                    )
       ) #end main panel
     
 ))

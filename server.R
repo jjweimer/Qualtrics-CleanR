@@ -1,6 +1,7 @@
 library(shiny)
 library(lubridate)
 library(dplyr)
+library(ggplot2)
 library(plotly)
 
 # Define server logic 
@@ -26,7 +27,7 @@ shinyServer(function(input, output) {
     colnames(instruction) <- c("service","date","format","activity",
                                "num_attendants")
     #ensure date data type
-    #instruction$date <- mdy(instruction$date)
+    instruction$date <- mdy(instruction$date)
     #make num_attendants numeric
     instruction$num_attendants <- as.numeric(instruction$num_attendants)
     
@@ -72,7 +73,7 @@ shinyServer(function(input, output) {
     consults <- consults[consults$Q3 == 'Consultation',]
     colnames(consults) <- c("service","date","location","department",
                             "num_consult","category","time_spent","status")
-    #ensure date data type
+    #ensure date class
     #consults$date <- mdy(consults$date)
     #make num_consult numeric
     consults$num_consult <- as.numeric(consults$num_consult)
@@ -81,33 +82,47 @@ shinyServer(function(input, output) {
     
     #now deal with the departments. Lots of departments have multiple versions
     #of the dept name in the file (example, Non-UCSD and Not UCSD or 
-    #Communication and Communications). This will try to manually resolve these
-    #This is a bit delicate since it can't account for every typo
-    
+    #Communication and Communications). 
     
     #fix communications
-    consults$department[consults$department %in% c("Communication","Communications")] <- "Communications"
+    consults$department[consults$department %in% 
+            c("Communication",
+            "Communications")] <- "Communications"
     
     #fix non-ucsd affiliations
-    consults$department[consults$department %in% c("Non-UCSD (recent grad)", "Not UCSD", "UCSD Alumni")] <- "Non-UCSD"
+    consults$department[consults$department %in% 
+            c("Non-UCSD (recent grad)",
+              "Not UCSD",
+              "UCSD Alumni")] <- "Non-UCSD"
     #%in%  c("Non-UCSD (recent grad)", "Not UCSD", "UCSD Alumni")
     
     #fix Data Science
-    consults$department[consults$department %in% c("Data science", "Data Science & Engineering")] <- "Data Science"
+    consults$department[consults$department %in% 
+            c("Data science", 
+              "Data Science & Engineering")] <- "Data Science"
     #%in%  c("Data science", "Data Science & Engineering")
     
     #fix GPS
-    #c("GPS", "Global Policy and Strategy", "Global policy and Strategy")
-    #to "School of Global Policy and Strategy"
-    consults$department[consults$department %in% c("GPS", "Global Policy and Strategy", "Global Policy and Strategy","Global policy and Strategy")] <- "School of Global Policy and Strategy"
+    consults$department[consults$department %in%
+        c("GPS", "Global Policy and Strategy", 
+          "Global Policy and Strategy",
+          "Global policy and Strategy", 
+          "Global Policy and Stragegy")] <- "School of Global Policy and Strategy"
     
     #fix Business Analytics
-    #c("Business Intelligence Analysis (Extension)", "Business Intelligence Analysis/Extension", "Business Analytics")
-    #to "Business Intelligence Analysis"
-    consults$department[consults$department %in% c("Business Intelligence Analysis (Extension)", "Business Intelligence Analysis/Extension", "Business Analytics")] <- "Business Intelligence Analysis"
+    consults$department[consults$department %in% 
+            c("Business Intelligence Analysis (Extension)",
+              "Business Intelligence Analysis/Extension", 
+              "Business Analytics")] <- "Business Intelligence Analysis"
     
     #fix medicine
-    consults$department[consults$department %in% c("School of Medicine","Medicine ", "Med School")] <- "Medicine"
+    consults$department[consults$department %in% 
+            c("School of Medicine",
+              "Medicine ", "Med School")] <- "Medicine"
+    
+    #generate counts for each department
+    consults <- consults %>% group_by(department) %>%
+      mutate(dept_consult_count = n())
     
     return(consults)
   })
@@ -144,7 +159,7 @@ shinyServer(function(input, output) {
   ###################################################################
   
   #generate instruction text summary stats
-  output$instruction_stats <- renderPrint({ 
+  output$instruction_stats <- renderText({ 
     
     #read in the user data
     instruction_data <- Sortie_instruction() #return Sortie function
@@ -161,7 +176,7 @@ shinyServer(function(input, output) {
   })
   
   #generate outreach text summary stats
-  output$outreach_stats <- renderPrint({ 
+  output$outreach_stats <- renderText({ 
     
     #read in the user data
     outreach <- Sortie_outreach() #return Sortie function
@@ -177,7 +192,7 @@ shinyServer(function(input, output) {
   })
   
   ## text summary stats for Consults
-  output$consults_stats <- renderPrint({ 
+  output$consults_stats <- renderText({ 
     
     #read in the user data
     consults <- Sortie_consults() #return Sortie function
@@ -188,41 +203,87 @@ shinyServer(function(input, output) {
     date_max <- consults$date[nrow(consults)]
     num_consults <- nrow(consults)
     num_people_consulted <- sum(consults$num_consult)
+    num_departments <- length(unique(consults$department))
     
     return(paste("There were",num_consults,"consults from",date_min,"to",
-                 date_max, "reaching",num_people_consulted, "people")) 
+                 date_max, "reaching",num_people_consulted, "people in", 
+                 num_departments, "unique departments")) 
     
   })
   
   ## About Text
   
   output$about_text <- renderText({
-    
     "This is an applet to clean user uploaded Qualtrics Data.
     To use the app, upload a Qualtircs csv using the left sidebar. 
     Summary statistics, plots and tables will be generated for
     you automatically."
   })
   
-  output$dev_text <- renderText({
-    
-    "Developed by Joshua Weimer for the UCSD Data and GIS Lab."
-  })
-  #Developed by Joshua Weimer for the UCSD Data and GIS Lab.
-  
-  
   #############################################
+  ### PLOTS
+  ################################################
+  
+  #consults department counts
   output$consults_graph <- renderPlotly({
     
     #read in the user data
     consults <- Sortie_consults() #return Sortie function
+    consults <- consults[consults$dept_consult_count > 1,]
+    
+    #possibly add radio buttons for setting dates, cutoffs of dept count
+    
+    fig <- ggplotly(
+      consults %>% group_by(department) %>%
+      count(department) %>%
+      ggplot(aes(x = reorder(department,n), y = n, fill = department)) +
+      geom_col(alpha = 1) +
+      #geom_text(aes(label = n), hjust = -1) +
+      coord_flip() +
+      ggtitle("Most Frequently Consulted Departments (n > 1)") +
+      theme_bw() +
+      labs(x = NULL, y = "count") +
+      theme(legend.position="none")) %>% layout(height = 600) %>%
+      config(displayModeBar = F)
+      
+    return(fig)
     
     
-    fig <- plot_ly(x = consults$num_consult, 
-                   y = consults$department, 
-                   type = 'bar', orientation = 'h', height=1200)  %>% 
-      layout(yaxis = list(categoryorder = "total ascending"))
+  
   })
+  
+  ## instruction over time
+  output$instruction_time_plot <- renderPlotly({
+  
+    #read in df
+    instruction <- Sortie_instruction()
+    #lets make a couple fake events by duplicating observations
+    instruction <- rbind(instruction, instruction[3,], instruction[4,],
+                         instruction[7,], instruction[7,])
+    
+    #make daily events count
+    instruction <- instruction %>% group_by(date) %>%
+      mutate(daily_instruction_events = n())
+    
+    #make daily people count
+    instruction <- instruction %>% group_by(date) %>%
+      mutate(daily_people_instructed = sum(num_attendants)) 
+   
+    #plot
+    fig1 <- ggplotly(
+      instruction %>% 
+        ggplot(aes(x = date, y= daily_instruction_events)) +
+        geom_line() +
+        ggtitle("Instruction Events over time") +
+        ylim(0,5) +
+        theme_bw() +
+        theme(legend.position="none")) %>% config(displayModeBar = F) %>% 
+      layout(height = 600)
+    
+    return(fig1)
+  })
+  
+  
   
   
 })
