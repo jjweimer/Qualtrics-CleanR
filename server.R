@@ -26,8 +26,7 @@ shinyServer(function(input, output) {
     instruction <- instruction[instruction$Q3 == "Instruction",]
     colnames(instruction) <- c("service","date","format","activity",
                                "num_attendants")
-    #ensure date data type
-    instruction$date <- mdy(instruction$date)
+    
     #make num_attendants numeric
     instruction$num_attendants <- as.numeric(instruction$num_attendants)
     
@@ -243,8 +242,9 @@ shinyServer(function(input, output) {
       ggtitle("Most Frequently Consulted Departments (n > 1)") +
       theme_bw() +
       labs(x = NULL, y = "count") +
-      theme(legend.position="none")) %>% layout(height = 600) %>%
-      config(displayModeBar = F)
+      theme(legend.position="none")
+      ) %>% layout(height = 600) %>%
+        config(displayModeBar = F)
       
     return(fig)
     
@@ -257,6 +257,10 @@ shinyServer(function(input, output) {
   
     #read in df
     instruction <- Sortie_instruction()
+    
+    #ensure date class
+    instruction$date <- mdy(instruction$date)
+    
     #lets make a couple fake events by duplicating observations
     instruction <- rbind(instruction, instruction[3,], instruction[4,],
                          instruction[7,], instruction[7,])
@@ -277,8 +281,8 @@ shinyServer(function(input, output) {
         ggtitle("Instruction Events over time") +
         ylim(0,5) +
         theme_bw() +
-        theme(legend.position="none")) %>% config(displayModeBar = F) %>% 
-      layout(height = 600)
+        theme(legend.position="none")
+      ) %>% config(displayModeBar = F) 
     
     return(fig1)
   })

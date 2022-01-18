@@ -36,17 +36,25 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
       mainPanel(
         tabsetPanel(type='tabs',
                     tabPanel("Instruction",
-                             #tableOutput("instruction_data"),
+                             tags$hr(),
                              textOutput("instruction_stats"),
                              tags$hr(),
-                             plotlyOutput("instruction_time_plot")),
+                             plotlyOutput("instruction_time_plot"),
+                             tags$hr(),
+                             tableOutput("instruction_data")
+                             ),
                     tabPanel("Outreach",
+                             tags$hr(),
+                             textOutput("outreach_stats"),
+                             tags$hr(),
                              tableOutput("outreach_data"),
-                             textOutput("outreach_stats")),
+                             ),
                     tabPanel("Consults",
+                             tags$hr(),
                              textOutput("consults_stats"),
                              tags$hr(),
-                             plotlyOutput("consults_graph"))
+                             plotlyOutput("consults_graph")
+                             )
                     )
       ) #end main panel
     
