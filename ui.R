@@ -22,6 +22,19 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                     "text/comma-separated-values,text/plain",
                     ".csv")
         ),
+        selectInput("quarter", "Choose A Quarter:", #this is our selector
+                    c("All" = "All",
+                      "Winter" = "WI",
+                      "Spring" = "SP",
+                      "Summer" = "SU",
+                      "Fall" = "FA",
+                      "Break" = "Break")),
+        selectInput("year", "Choose A Year:", #this is our selector
+                    c("All" = "All",
+                      "2022" = "2022",
+                      "2021" = "2021",
+                      "2020" = "2020",
+                      "2019" = "2019")),
         tags$hr(),
         helpText("This is an applet to clean user uploaded Qualtrics data.
                   Upload a Qualtrics .csv file using the button above. 
