@@ -247,6 +247,25 @@ shinyServer(function(input, output) {
     return(consults)
   })
   
+  #############################################################
+  ##### Returning updated inputs ##############################
+  
+  ###### check if "ALL" is selected
+  check_all <- reactive({
+    #filter to selected quarter
+    if(input$quarter == "All" & input$year == "All"){
+      return(TRUE)
+    }
+    else{
+      return(FALSE)
+    }
+  })
+  
+  #return n
+  return_n <- reactive({
+    return(input$n)
+  })
+  
   
   ###################################################################
   ### Render Tables  ############
@@ -254,6 +273,11 @@ shinyServer(function(input, output) {
   
   #render instruction data frame
   output$instruction_data <- renderTable({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
     
     #read in the user data
     instruction_data <- Sortie_instruction() #return Sortie function
@@ -267,6 +291,11 @@ shinyServer(function(input, output) {
   
   #render outreach data frame
   output$outreach_data <- renderTable({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
     
     #read in the user data
     outreach <- Sortie_outreach() #return Sortie function
@@ -286,6 +315,11 @@ shinyServer(function(input, output) {
   #generate instruction text summary stats
   output$instruction_stats <- renderText({ 
     
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
     #read in the user data
     instruction_data <- Sortie_instruction() #return Sortie function
   
@@ -294,6 +328,7 @@ shinyServer(function(input, output) {
     ins_num_groups<- length(unique(instruction_data$activity))
     ins_num_students_reached <- sum(instruction_data$num_attendants)
     
+  
     return(paste("There were",ins_num_activities,
                  "instruction acitivites reaching",ins_num_groups,
                  "groups and",ins_num_students_reached,"students"))
@@ -303,6 +338,11 @@ shinyServer(function(input, output) {
   #generate outreach text summary stats
   output$outreach_stats <- renderText({ 
     
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
     #read in the user data
     outreach <- Sortie_outreach() #return Sortie function
     
@@ -311,13 +351,19 @@ shinyServer(function(input, output) {
     out_num_students <- sum(outreach$attendees)
     
     #return text stat
-    return(paste("There were",out_num_activities,"outreach activities reaching",
+    return(paste("There were",out_num_activities,
+                 "outreach activities reaching",
                 out_num_students,"students"))
     
   })
   
   ## text summary stats for Consults
   output$consults_stats <- renderText({ 
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
     
     #read in the user data
     consults <- Sortie_consults() #return Sortie function
@@ -330,19 +376,19 @@ shinyServer(function(input, output) {
     num_people_consulted <- sum(consults$num_consult)
     num_departments <- length(unique(consults$department))
     
-    return(paste("There were",num_consults,"consults from",date_min,"to",
-                 date_max, "reaching",num_people_consulted, "people in", 
-                 num_departments, "unique departments")) 
+    condition <- check_all()
     
-  })
-  
-  ## About Text
-  
-  output$about_text <- renderText({
-    "This is an applet to clean user uploaded Qualtrics Data.
-    To use the app, upload a Qualtircs csv using the left sidebar. 
-    Summary statistics, plots and tables will be generated for
-    you automatically."
+    if(condition){
+      return(paste("There were",num_consults,"consults from",date_min,"to",
+                   date_max, "reaching",num_people_consulted, "people in", 
+                   num_departments, "unique departments")) 
+    }
+    else{
+      return(paste("There were",num_consults, "consults reaching",
+                   num_people_consulted, "people in", 
+                   num_departments, "unique departments"))
+    }
+    
   })
   
   #############################################
@@ -364,7 +410,8 @@ shinyServer(function(input, output) {
     consults <- consults[is.na(consults$department)== FALSE,]
     
     #let user select minimum n of dept
-    #consults <- consults[consults$dept_consult_count > n,]
+    n <- return_n()
+    consults <- consults[consults$dept_consult_count >= n,]
     
     #possibly add radio buttons for setting dates, cutoffs of dept count
     
@@ -379,10 +426,34 @@ shinyServer(function(input, output) {
       theme_bw() +
       labs(x = NULL, y = "count") +
       theme(legend.position="none")
-      ) %>% layout(height = 600) %>%
+      ) %>% #layout(height = 600) %>%
         config(displayModeBar = F)
       
     return(fig)
+  })
+  
+  #num consults per week over time
+  output$consults_per_week <- renderPlotly({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
+    #read in the user data
+    consults <- Sortie_consults() #return Sortie function
+    
+    fig <- ggplotly(
+      consults %>% group_by(week, year) %>%
+        count(week) %>% 
+        ggplot(aes(x = week, y = n, fill = year)) +
+        geom_bar(stat = "identity", position = 'dodge') +
+        ggtitle("Weekly Consults") +
+        labs(y = "Number of Consults")
+    )
+
+    return(fig)
+    
   })
   
   ## instruction over time

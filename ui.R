@@ -35,6 +35,8 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                       "2021" = "2021",
                       "2020" = "2020",
                       "2019" = "2019")),
+        numericInput("n","Minimum number of Observations:",2,
+                     min = 1),
         tags$hr(),
         helpText("This is an applet to clean user uploaded Qualtrics data.
                   Upload a Qualtrics .csv file using the button above. 
@@ -48,6 +50,15 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
       #Main Panel
       mainPanel(
         tabsetPanel(type='tabs',
+                    tabPanel("Consults",
+                             tags$hr(),
+                             textOutput("consults_stats"),
+                             tags$hr(),
+                             plotlyOutput("consults_graph"),
+                             tags$hr(),
+                             plotlyOutput("consults_per_week"),
+                             tags$hr()
+                    ),
                     tabPanel("Instruction",
                              tags$hr(),
                              textOutput("instruction_stats"),
@@ -61,12 +72,6 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                              textOutput("outreach_stats"),
                              tags$hr(),
                              tableOutput("outreach_data"),
-                             ),
-                    tabPanel("Consults",
-                             tags$hr(),
-                             textOutput("consults_stats"),
-                             tags$hr(),
-                             plotlyOutput("consults_graph")
                              )
                     )
       ) #end main panel
