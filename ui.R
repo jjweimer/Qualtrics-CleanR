@@ -9,7 +9,7 @@ library(shinythemes)
 shinyUI(fluidPage(theme = shinytheme("cosmo"),
                   
     #navbar
-    navbarPage("Qualtrics Data Cleaner"),
+    navbarPage("Qualtrics Consults/Instruction/Outreach Data Cleaner"),
                   
     # Alternative way to render title
     #titlePanel("Qualtrics Data Cleaner"),
@@ -35,13 +35,14 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                       "2021" = "2021",
                       "2020" = "2020",
                       "2019" = "2019")),
-        numericInput("n","Minimum number of Observations:",2,
-                     min = 1),
         tags$hr(),
-        helpText("This is an applet to clean user uploaded Qualtrics data.
+        helpText("This is an applet to clean user uploaded service stats Qualtrics
+                  data.
                   Upload a Qualtrics .csv file using the button above. 
                   Summary statistics, plots and tables will be generated for
-                  you automatically."),
+                  you automatically. To subset your data by Quarter or Year 
+                  (or both) you can use the \"Choose a Quarter\" and 
+                 \"Choose a Year\" boxes."),
         tags$hr() #,
         #helpText("Developed by Joshua Weimer for the UCSD Data and GIS Lab.")
         
@@ -53,7 +54,10 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                     tabPanel("Consults",
                              tags$hr(),
                              textOutput("consults_stats"),
+                             
                              tags$hr(),
+                             numericInput("n","Minimum Count of Department:"
+                                          ,2,min = 1),
                              plotlyOutput("consults_graph"),
                              tags$hr(),
                              plotlyOutput("consults_per_week"),

@@ -403,6 +403,9 @@ shinyServer(function(input, output) {
       return(NULL)
     }
     
+    
+    
+    
     #read in the user data
     consults <- Sortie_consults() #return Sortie function
     
@@ -413,6 +416,11 @@ shinyServer(function(input, output) {
     n <- return_n()
     consults <- consults[consults$dept_consult_count >= n,]
     
+    
+    #make the title  reactive to n
+    title <- paste("Most Frequently Consulted Departments (n > ", 
+                   n,")" , sep = '')
+    
     #possibly add radio buttons for setting dates, cutoffs of dept count
     
     fig <- ggplotly(
@@ -422,7 +430,7 @@ shinyServer(function(input, output) {
       geom_col(alpha = 1) +
       #geom_text(aes(label = n), hjust = -1) +
       coord_flip() +
-      ggtitle("Most Frequently Consulted Departments") +
+      ggtitle(title) +
       theme_bw() +
       labs(x = NULL, y = "count") +
       theme(legend.position="none")
@@ -449,8 +457,9 @@ shinyServer(function(input, output) {
         ggplot(aes(x = week, y = n, fill = year)) +
         geom_bar(stat = "identity", position = 'dodge') +
         ggtitle("Weekly Consults") +
-        labs(y = "Number of Consults")
-    )
+        labs(y = "Number of Consults") +
+        theme_bw()
+    ) %>% config(displayModeBar = F) 
 
     return(fig)
     
