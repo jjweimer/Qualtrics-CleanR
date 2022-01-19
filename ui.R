@@ -40,9 +40,12 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                   data.
                   Upload a Qualtrics .csv file using the button above. 
                   Summary statistics, plots and tables will be generated for
-                  you automatically. To subset your data by Quarter or Year 
+                  you automatically."),
+        helpText("To subset your data by Quarter or Year 
                   (or both) you can use the \"Choose a Quarter\" and 
                  \"Choose a Year\" boxes."),
+        helpText("Tip: Plots are interactive! Hover your mouse over observations
+                 to learn more about the data."),
         tags$hr() #,
         #helpText("Developed by Joshua Weimer for the UCSD Data and GIS Lab.")
         
