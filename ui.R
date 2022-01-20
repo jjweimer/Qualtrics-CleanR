@@ -4,6 +4,7 @@ library(dplyr)
 library(plotly)
 library(ggplot2)
 library(shinythemes)
+library(DT) #for better tables
 
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(theme = shinytheme("cosmo"),
@@ -38,8 +39,11 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
         tags$hr(),
         # Button
         downloadButton("downloadConsults", "Download Consults"),
+        helpText("To download clean Consults data"),
         downloadButton("downloadInstruction", "Download Instruction"),
+        helpText("To download clean Instruction data"),
         downloadButton("downloadOutreach", "Download Outreach"),
+        helpText("To download clean Outreach data"),
         tags$hr(),
         helpText("This is an applet to clean user uploaded service stats Qualtrics
                   data.
@@ -49,6 +53,11 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
         helpText("To subset your data by Quarter or Year 
                   (or both) you can use the \"Choose a Quarter\" and 
                  \"Choose a Year\" boxes."),
+        helpText("Furthermore, the download buttons can be used to easily export
+                 cleaned versions of your uploaded service stats. These data
+                 exports are reactive to the selected quarter/year, so you can
+                 filter as you wish, or set both options to \'All\' for all 
+                 observations"),
         helpText("Tip: Plots are interactive! Hover your mouse over observations
                  to learn more about the data."),
         tags$hr() #,
@@ -76,13 +85,13 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                              tags$hr(),
                              plotlyOutput("instruction_time_plot"),
                              tags$hr(),
-                             tableOutput("instruction_data")
+                             DT::dataTableOutput("instruction_data_DT")
                              ),
                     tabPanel("Outreach",
                              tags$hr(),
                              textOutput("outreach_stats"),
                              tags$hr(),
-                             tableOutput("outreach_data"),
+                             DT::dataTableOutput("outreach_data_DT"),
                              )
                     )
       ) #end main panel

@@ -3,6 +3,7 @@ library(lubridate)
 library(dplyr)
 library(ggplot2)
 library(plotly)
+library(DT) #for better tables
 
 # Define server logic 
 shinyServer(function(input, output) {
@@ -255,6 +256,17 @@ shinyServer(function(input, output) {
   })
   
   
+  #test instruction DT table
+  #
+  output$instruction_data_DT <- DT::renderDataTable(Sortie_instruction(),
+                                                    options = list(scrollX = TRUE),
+                                                    rownames = FALSE)
+  
+  #outreach data table
+  output$outreach_data_DT <- DT::renderDataTable(Sortie_outreach(),
+                                                 options = list(scrollX = TRUE),
+                                                 rownames = FALSE)
+  
   ###################################################################
   ###### Text Summary Statistics using Cleaned data  ############
   ###################################################################
@@ -350,9 +362,6 @@ shinyServer(function(input, output) {
       return(NULL)
     }
     
-    
-    
-    
     #read in the user data
     consults <- Sortie_consults() #return Sortie function
     
@@ -368,12 +377,10 @@ shinyServer(function(input, output) {
     title <- paste("Most Frequently Consulted Departments (n > ", 
                    n,")" , sep = '')
     
-    #possibly add radio buttons for setting dates, cutoffs of dept count
-    
     fig <- ggplotly(
       consults %>% group_by(department) %>%
       count(department) %>%
-      ggplot(aes(x = reorder(department,n), y = n, fill = department)) +
+      ggplot(aes(x = reorder(department,n), y = n, fill = n)) +
       geom_col(alpha = 1) +
       #geom_text(aes(label = n), hjust = -1) +
       coord_flip() +
@@ -458,7 +465,9 @@ shinyServer(function(input, output) {
   
   output$downloadConsults <-downloadHandler(
     
-    filename = 'consults.csv',
+    filename = function(){
+      paste('consults',input$quarter,input$year,'.csv', sep = '')
+    },
     
     content = function(file){
       write.csv(Sortie_consults(),file,row.names = FALSE)
@@ -469,7 +478,9 @@ shinyServer(function(input, output) {
   output$downloadInstruction <-downloadHandler(
     
     #filename, can be a function! will make reactvie to Q/year input
-    filename = 'instruction.csv',
+    filename = function(){
+      paste('instruction',input$quarter,input$year,'.csv', sep = '')
+    },
     
     content = function(file){
       write.csv(Sortie_instruction(),file,row.names = FALSE)
@@ -479,8 +490,9 @@ shinyServer(function(input, output) {
   
   output$downloadOutreach <-downloadHandler(
     
-    #filename, can be a function! will make reactvie to Q/year input
-    filename = 'outreach.csv',
+    filename = function(){
+      paste('outreach',input$quarter,input$year,'.csv', sep = '')
+    },
     
     content = function(file){
       write.csv(Sortie_outreach(),file,row.names = FALSE)
