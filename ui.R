@@ -76,8 +76,9 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                                           ,2,min = 1),
                              plotlyOutput("consults_graph"),
                              tags$hr(),
-                             plotlyOutput("consults_per_week"),
-                             tags$hr()
+                             plotlyOutput("intra_quarter_consults"),
+                             tags$hr(),
+                             plotlyOutput("consults_per_week")
                     ),
                     tabPanel("Instruction",
                              tags$hr(),

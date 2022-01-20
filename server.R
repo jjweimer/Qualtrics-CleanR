@@ -209,6 +209,11 @@ shinyServer(function(input, output) {
     }
   })
   
+  #get quarter input
+  get_quarter <- reactive({
+    return(input$quarter)
+  })
+  
   #return n
   return_n <- reactive({
     return(input$n)
@@ -256,7 +261,7 @@ shinyServer(function(input, output) {
   })
   
   
-  #test instruction DT table
+  #instruction DT table
   #
   output$instruction_data_DT <- DT::renderDataTable(Sortie_instruction(),
                                                     options = list(scrollX = TRUE),
@@ -374,7 +379,7 @@ shinyServer(function(input, output) {
     
     
     #make the title  reactive to n
-    title <- paste("Most Frequently Consulted Departments (n > ", 
+    title <- paste("Most Frequently Consulted Departments (n >= ", 
                    n,")" , sep = '')
     
     fig <- ggplotly(
@@ -411,13 +416,46 @@ shinyServer(function(input, output) {
         ggplot(aes(x = week, y = n, fill = year)) +
         geom_bar(stat = "identity", position = 'dodge') +
         ggtitle("Weekly Consults") +
-        labs(y = "Number of Consults") +
+        labs(y = "Number of Consults", x = "Week of the Year") +
         theme_bw()
     ) %>% config(displayModeBar = F) 
 
     return(fig)
     
   })
+  
+  #intra-quarter weekly consults
+  output$intra_quarter_consults <- renderPlotly({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
+    #read in the user data
+    consults <- Sortie_consults() #return Sortie function
+    
+    #get the selected quarter
+    q <- get_quarter()
+    
+    title <- paste("Consults per week of the Quarter (",
+                   q," Quarter)", sep = '')
+    
+    fig <- ggplotly(
+      consults %>% group_by(week_of_quarter, year) %>%
+        count(week) %>% 
+        ggplot(aes(x = week_of_quarter, y = n, fill = year)) +
+        geom_bar(stat = "identity", position = 'dodge') +
+        ggtitle(title) +
+        xlim(0,11) +
+        labs(y = "Number of Consults", x = "Week") +
+        theme_bw()
+    ) %>% config(displayModeBar = F) 
+    
+    return(fig)
+    
+  })
+  
   
   ## instruction over time
   output$instruction_time_plot <- renderPlotly({
@@ -464,46 +502,35 @@ shinyServer(function(input, output) {
   ################################################
   
   output$downloadConsults <-downloadHandler(
-    
     filename = function(){
       paste('consults',input$quarter,input$year,'.csv', sep = '')
     },
-    
     content = function(file){
       write.csv(Sortie_consults(),file,row.names = FALSE)
     }
-    
   )
   
   output$downloadInstruction <-downloadHandler(
-    
-    #filename, can be a function! will make reactvie to Q/year input
+    #filename, can be a function! 
     filename = function(){
       paste('instruction',input$quarter,input$year,'.csv', sep = '')
     },
-    
     content = function(file){
       write.csv(Sortie_instruction(),file,row.names = FALSE)
     }
-    
   )
   
   output$downloadOutreach <-downloadHandler(
-    
     filename = function(){
       paste('outreach',input$quarter,input$year,'.csv', sep = '')
     },
-    
     content = function(file){
       write.csv(Sortie_outreach(),file,row.names = FALSE)
     }
-    
   )
-  
-  
-  
 })
-
+#####################################################################
+############# END SERVER   ##########################################
 ####################################################################
 ########## HELPER FUNCTIONS ########################################
 ###################################################################
