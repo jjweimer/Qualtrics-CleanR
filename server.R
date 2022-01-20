@@ -485,11 +485,12 @@ shinyServer(function(input, output) {
    
     #plot
     fig1 <- ggplotly(
-      instruction %>% 
-        ggplot(aes(x = date, y= daily_instruction_events)) +
-        geom_line() +
-        ggtitle("Instruction Events over time") +
-        ylim(0,5) +
+      instruction %>% group_by(date) %>% count(date) %>%
+        ggplot(aes(x = date, y= n, fill = n)) +
+        geom_bar(stat = 'identity') +
+        ggtitle("Daily Instruction Events") +
+        labs(x = NULL, y = "Number of Instruction Events") +
+        #ylim(0,5) +
         theme_bw() +
         theme(legend.position="none")
       ) %>% config(displayModeBar = F) 
