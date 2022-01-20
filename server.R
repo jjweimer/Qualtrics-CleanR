@@ -39,7 +39,11 @@ shinyServer(function(input, output) {
     #get year
     instruction$year <- format(instruction$date,format =  '%Y')
     
+    #week of quarter
     instruction <- week_to_quarter(instruction)
+    
+    #week of quarter
+    instruction <- week_of_quarter(instruction)
     
     #filter to selected quarter
     if(input$quarter != "All"){
@@ -86,6 +90,9 @@ shinyServer(function(input, output) {
     #week to quarter
     outreach <- week_to_quarter(outreach)
     
+    #week of quarter
+    outreach <- week_of_quarter(outreach)
+    
     #filter to selected quarter
     if(input$quarter != "All"){
       outreach <- outreach %>% filter(quarter == input$quarter)
@@ -129,28 +136,11 @@ shinyServer(function(input, output) {
     #get year
     consults$year <- format(consults$date,format =  '%Y')
     
-    consults$quarter <- c()
-    #for 2020
-    consults$quarter[consults$week >=2 & consults$week <= 12 &
-                       consults$year == 2020] <- "WI"
-    consults$quarter[consults$week >=14 & consults$week <= 24 & 
-                       consults$year == 2020] <- "SP"
-    consults$quarter[consults$week >=27 & consults$week <= 36 &
-                       consults$year == 2020] <- "SU"
-    consults$quarter[consults$week >= 40 & consults$week <= 51 &
-                       consults$year == 2020] <- "FA"
+    #week to quarter
+    consults <- week_to_quarter(consults)
     
-    #for 2021
-    consults$quarter[consults$week >=1 & consults$week <= 11 &
-                       consults$year == 2021] <- "WI"
-    consults$quarter[consults$week >=13 & consults$week <= 23 & 
-                       consults$year == 2021] <- "SP"
-    consults$quarter[consults$week >=26 & consults$week <= 35 &
-                       consults$year == 2021] <- "SU"
-    consults$quarter[consults$week >= 38 & consults$week <= 49 &
-                       consults$year == 2021] <- "FA"
-    #all other are breaks
-    consults$quarter[is.na(consults$quarter)] <- "Break"
+    #week of quarter
+    consults <- week_of_quarter(consults)
     
     #now deal with the departments. Lots of departments have multiple versions
     #of the dept name in the file (example, Non-UCSD and Not UCSD or 
@@ -524,3 +514,56 @@ week_to_quarter <- function(df){
   return(df)
 }
 
+#######
+## week of quarter
+
+week_of_quarter <- function(df){
+  
+  #init empty column
+  df$week_of_quarter <- c()
+  
+  #for 2019
+  df$week_of_quarter[df$quarter == "WI" & df$year == 2019] <- 
+    df$week[df$quarter == "WI" & df$year == 2019] - 1
+  df$week_of_quarter[df$quarter == "SP" & df$year == 2019] <- 
+    df$week[df$quarter == "SP" & df$year == 2019] - 13
+  df$week_of_quarter[df$quarter == "SU" & df$year == 2019] <- 
+    df$week[df$quarter == "SU" & df$year == 2019] - 26
+  df$week_of_quarter[df$quarter == "FA" & df$year == 2019] <- 
+    df$week[df$quarter == "FA" & df$year == 2019] - 39 #we want a 0 week here
+  
+  
+  #for 2020
+  df$week_of_quarter[df$quarter == "WI" & df$year == 2020] <- 
+    df$week[df$quarter == "WI" & df$year == 2020] - 1
+  df$week_of_quarter[df$quarter == "SP" & df$year == 2020] <- 
+    df$week[df$quarter == "SP" & df$year == 2020] - 13
+  df$week_of_quarter[df$quarter == "SU" & df$year == 2020] <- 
+    df$week[df$quarter == "SU" & df$year == 2020] - 26
+  df$week_of_quarter[df$quarter == "FA" & df$year == 2020] <- 
+    df$week[df$quarter == "FA" & df$year == 2020] - 40 #we want a 0 week here
+  
+  
+  #for 2021
+  df$week_of_quarter[df$quarter == "WI" & df$year == 2021] <- 
+    df$week[df$quarter == "WI" & df$year == 2021] - 0
+  df$week_of_quarter[df$quarter == "SP" & df$year == 2021] <-
+    df$week[df$quarter == "SP" & df$year == 2021] - 12
+  df$week_of_quarter[df$quarter == "SU" & df$year == 2021] <-
+    df$week[df$quarter == "SU" & df$year == 2021] - 25
+  df$week_of_quarter[df$quarter == "FA" & df$year == 2021] <-
+    df$week[df$quarter == "FA" & df$year == 2021] - 38 #we want a 0 week here
+  
+  
+  #for 2022
+  df$week_of_quarter[df$quarter == "WI" & df$year == 2022] <- 
+    df$week[df$quarter == "WI" & df$year == 2022] - 0
+  df$week_of_quarter[df$quarter == "SP" & df$year == 2022] <-
+    df$week[df$quarter == "SP" & df$year == 2022] - 12
+  df$week_of_quarter[df$quarter == "SU" & df$year == 2022] <-
+    df$week[df$quarter == "SU" & df$year == 2022] - 25
+  df$week_of_quarter[df$quarter == "FA" & df$year == 2022] <-
+    df$week[df$quarter == "FA" & df$year == 2022] - 38 #we want a 0 week here
+  
+  return(df)
+}
