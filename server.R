@@ -39,29 +39,7 @@ shinyServer(function(input, output) {
     #get year
     instruction$year <- format(instruction$date,format =  '%Y')
     
-    instruction$quarter <- c()
-    
-    #for 2020
-    instruction$quarter[instruction$week >=2 & instruction$week <= 12 &
-                          instruction$year == 2020] <- "WI"
-    instruction$quarter[instruction$week >=14 & instruction$week <= 24 & 
-                          instruction$year == 2020] <- "SP"
-    instruction$quarter[instruction$week >=27 & instruction$week <= 36 &
-                          instruction$year == 2020] <- "SU"
-    instruction$quarter[instruction$week >= 40 & instruction$week <= 51 &
-                          instruction$year == 2020] <- "FA"
-    
-    #for 2021
-    instruction$quarter[instruction$week >=1 & instruction$week <= 11 &
-                          instruction$year == 2021] <- "WI"
-    instruction$quarter[instruction$week >=13 & instruction$week <= 23 & 
-                          instruction$year == 2021] <- "SP"
-    instruction$quarter[instruction$week >=26 & instruction$week <= 35 &
-                          instruction$year == 2021] <- "SU"
-    instruction$quarter[instruction$week >= 38 & instruction$week <= 49 &
-                          instruction$year == 2021] <- "FA"
-    #all other are breaks
-    instruction$quarter[is.na(instruction$quarter)] <- "Break"
+    instruction <- week_to_quarter(instruction)
     
     #filter to selected quarter
     if(input$quarter != "All"){
@@ -105,29 +83,8 @@ shinyServer(function(input, output) {
     #get year
     outreach$year <- format(outreach$date,format =  '%Y')
     
-    outreach$quarter <- c()
-    
-    #for 2020
-    outreach$quarter[outreach$week >=2 & outreach$week <= 12 &
-                       outreach$year == 2020] <- "WI"
-    outreach$quarter[outreach$week >=14 & outreach$week <= 24 & 
-                       outreach$year == 2020] <- "SP"
-    outreach$quarter[outreach$week >=27 & outreach$week <= 36 &
-                       outreach$year == 2020] <- "SU"
-    outreach$quarter[outreach$week >= 40 & outreach$week <= 51 &
-                       outreach$year == 2020] <- "FA"
-    
-    #for 2021
-    outreach$quarter[outreach$week >=1 & outreach$week <= 11 &
-                       outreach$year == 2021] <- "WI"
-    outreach$quarter[outreach$week >=13 & outreach$week <= 23 & 
-                       outreach$year == 2021] <- "SP"
-    outreach$quarter[outreach$week >=26 & outreach$week <= 35 &
-                       outreach$year == 2021] <- "SU"
-    outreach$quarter[outreach$week >= 38 & outreach$week <= 49 &
-                       outreach$year == 2021] <- "FA"
-    #all other are breaks
-    outreach$quarter[is.na(outreach$quarter)] <- "Break"
+    #week to quarter
+    outreach <- week_to_quarter(outreach)
     
     #filter to selected quarter
     if(input$quarter != "All"){
@@ -505,5 +462,65 @@ shinyServer(function(input, output) {
     return(fig1)
   })
   
-
 })
+
+####################################################################
+########## HELPER FUNCTIONS ########################################
+###################################################################
+
+## Helper function for determining quarters by year
+week_to_quarter <- function(df){
+  
+  #use isoweek(mdy("12/14/19")) (month/day/year) (needs lubridate)
+  # while browsing academic calendar to quickly get week cutoffs
+  
+  #init empty quarter column
+  df$quarter <- c()
+  
+  #for 2019
+  df$quarter[df$week >=2 & df$week <= 12 &
+               df$year == 2019] <- "WI"
+  df$quarter[df$week >=14 & df$week <= 24 & 
+               df$year == 2019] <- "SP"
+  df$quarter[df$week >=27 & df$week <= 36 &
+               df$year == 2019] <- "SU"
+  df$quarter[df$week >= 39 & df$week <= 50 &
+               df$year == 2019] <- "FA"
+  
+  #for 2020
+  df$quarter[df$week >=2 & df$week <= 12 &
+               df$year == 2020] <- "WI"
+  df$quarter[df$week >=14 & df$week <= 24 & 
+               df$year == 2020] <- "SP"
+  df$quarter[df$week >=27 & df$week <= 36 &
+               df$year == 2020] <- "SU"
+  df$quarter[df$week >= 40 & df$week <= 51 &
+               df$year == 2020] <- "FA"
+  
+  
+  #for 2021
+  df$quarter[df$week >=1 & df$week <= 11 &
+               df$year == 2021] <- "WI"
+  df$quarter[df$week >=13 & df$week <= 23 & 
+               df$year == 2021] <- "SP"
+  df$quarter[df$week >=26 & df$week <= 35 &
+               df$year == 2021] <- "SU"
+  df$quarter[df$week >= 38 & df$week <= 49 &
+               df$year == 2021] <- "FA"
+  
+  #for 2022
+  df$quarter[df$week >=1 & df$week <= 11 &
+               df$year == 2022] <- "WI"
+  df$quarter[df$week >=13 & df$week <= 23 & 
+               df$year == 2022] <- "SP"
+  df$quarter[df$week >=26 & df$week <= 35 &
+               df$year == 2022] <- "SU"
+  df$quarter[df$week >= 38 & df$week <= 49 &
+               df$year == 2022] <- "FA"
+  
+  #all other are breaks
+  df$quarter[is.na(df$quarter)] <- "Break"
+  
+  return(df)
+}
+

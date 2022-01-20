@@ -57,7 +57,6 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                     tabPanel("Consults",
                              tags$hr(),
                              textOutput("consults_stats"),
-                             
                              tags$hr(),
                              numericInput("n","Minimum Count of Department:"
                                           ,2,min = 1),
