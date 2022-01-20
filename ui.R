@@ -36,6 +36,11 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                       "2020" = "2020",
                       "2019" = "2019")),
         tags$hr(),
+        # Button
+        downloadButton("downloadConsults", "Download Consults"),
+        downloadButton("downloadInstruction", "Download Instruction"),
+        downloadButton("downloadOutreach", "Download Outreach"),
+        tags$hr(),
         helpText("This is an applet to clean user uploaded service stats Qualtrics
                   data.
                   Upload a Qualtrics .csv file using the button above. 

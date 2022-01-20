@@ -452,6 +452,44 @@ shinyServer(function(input, output) {
     return(fig1)
   })
   
+  #################################################
+  ## FILE DOWNLOADS   #############################
+  ################################################
+  
+  output$downloadConsults <-downloadHandler(
+    
+    filename = 'consults.csv',
+    
+    content = function(file){
+      write.csv(Sortie_consults(),file,row.names = FALSE)
+    }
+    
+  )
+  
+  output$downloadInstruction <-downloadHandler(
+    
+    #filename, can be a function! will make reactvie to Q/year input
+    filename = 'instruction.csv',
+    
+    content = function(file){
+      write.csv(Sortie_instruction(),file,row.names = FALSE)
+    }
+    
+  )
+  
+  output$downloadOutreach <-downloadHandler(
+    
+    #filename, can be a function! will make reactvie to Q/year input
+    filename = 'outreach.csv',
+    
+    content = function(file){
+      write.csv(Sortie_outreach(),file,row.names = FALSE)
+    }
+    
+  )
+  
+  
+  
 })
 
 ####################################################################
