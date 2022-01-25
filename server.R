@@ -5,6 +5,9 @@ library(ggplot2)
 library(plotly)
 library(DT) #for better tables
 
+#max file size 30mb for upload
+options(shiny.maxRequestSize = 30*1024^2)
+
 # Define server logic 
 shinyServer(function(input, output) {
 
@@ -23,10 +26,10 @@ shinyServer(function(input, output) {
     user_data <- read.csv(inFile$datapath)
     
     #now clean data for instruction_data
-    instruction <- user_data %>% select(Q3, Q16, Q192.1, Q17, Q21)
+    instruction <- user_data %>% select(Q2,Q3, Q16, Q192.1, Q17, Q21)
     instruction <- instruction[instruction$Q3 == "Instruction",]
-    colnames(instruction) <- c("service","date","format","activity",
-                               "num_attendants")
+    colnames(instruction) <- c("entered_by","service","date","format",
+                               "activity","num_attendants")
     
     #make num_attendants numeric
     instruction$num_attendants <- as.numeric(instruction$num_attendants)
@@ -39,6 +42,9 @@ shinyServer(function(input, output) {
     
     #get year
     instruction$year <- format(instruction$date,format =  '%Y')
+    
+    #clean years
+    instruction <- clean_years(instruction)
     
     #week of quarter
     instruction <- week_to_quarter(instruction)
@@ -71,11 +77,11 @@ shinyServer(function(input, output) {
     user_data <- read.csv(inFile$datapath)
     
     #now clean data for outreach_data
-    outreach <- user_data %>% select(Q3, Q156, Q198, Q174, Q184, 
+    outreach <- user_data %>% select(Q2,Q3, Q156, Q198, Q174, Q184, 
                                      Q194, Q202, Q196)
     outreach <- outreach[outreach$Q3 == "Outreach",]
-    colnames(outreach) <- c("service","date","type","home_program", "attendees",
-                            "status","duration","time_prep")
+    colnames(outreach) <- c("entered_by","service","date","type","home_program",
+                            "attendees","status","duration","time_prep")
     #ensure date data type
     outreach$date <- mdy(outreach$date)
     #make attendees numeric
@@ -87,6 +93,9 @@ shinyServer(function(input, output) {
     
     #get year
     outreach$year <- format(outreach$date,format =  '%Y')
+    
+    #clean years
+    outreach <- clean_years(outreach)
     
     #week to quarter
     outreach <- week_to_quarter(outreach)
@@ -119,10 +128,11 @@ shinyServer(function(input, output) {
     user_data <- read.csv(inFile$datapath)
     
     #now clean data for consults_data
-    consults <- user_data %>% select(Q3,Q38,Q39,Q40,Q42,Q43,Q44,Q45)
+    consults <- user_data %>% select(Q2,Q3,Q38,Q39,Q40,Q42,Q43,Q44,Q45)
     consults <- consults[consults$Q3 == 'Consultation',]
-    colnames(consults) <- c("service","date","location","department",
-                            "num_consult","category","time_spent","status")
+    colnames(consults) <- c("entered_by","service","date","location",
+                            "department", "num_consult","category",
+                            "time_spent","status")
     #ensure date class
     consults$date <- mdy(consults$date)
     #make num_consult numeric
@@ -136,6 +146,9 @@ shinyServer(function(input, output) {
     
     #get year
     consults$year <- format(consults$date,format =  '%Y')
+    
+    #clean years
+    consults <- clean_years(consults)
     
     #week to quarter
     consults <- week_to_quarter(consults)
@@ -272,6 +285,12 @@ shinyServer(function(input, output) {
                                                  options = list(scrollX = TRUE),
                                                  rownames = FALSE)
   
+  #consults 
+  
+  output$consults_data_DT <- DT::renderDataTable(Sortie_consults(),
+                                                 options = list(scrollX = TRUE),
+                                                 rownames = FALSE)
+  
   ###################################################################
   ###### Text Summary Statistics using Cleaned data  ############
   ###################################################################
@@ -290,9 +309,9 @@ shinyServer(function(input, output) {
     #now the text render part
     ins_num_activities <- nrow(instruction_data)
     ins_num_groups<- length(unique(instruction_data$activity))
-    ins_num_students_reached <- sum(instruction_data$num_attendants)
-    
-  
+    ins_num_students_reached <- sum(instruction_data$num_attendantsp[
+                                  !is.na(instruction$num_attendants)])
+    #return text
     return(paste("There were",ins_num_activities,
                  "instruction acitivites reaching",ins_num_groups,
                  "groups and",ins_num_students_reached,"students"))
@@ -312,7 +331,7 @@ shinyServer(function(input, output) {
     
     #now the text render part
     out_num_activities <- nrow(outreach)
-    out_num_students <- sum(outreach$attendees)
+    out_num_students <- sum(outreach$attendees[!is.na(outreach$attendees)])
     
     #return text stat
     return(paste("There were",out_num_activities,
@@ -334,10 +353,11 @@ shinyServer(function(input, output) {
     
     #now the text render part
     #how many consults in what date range?
-    date_min <- as.character(min(consults$date))
-    date_max <- as.character(max(consults$date))
+    date_min <- as.character(min(consults$date[!is.na(consults$date)]))
+    date_max <- as.character(max(consults$date[!is.na(consults$date)]))
     num_consults <- nrow(consults)
-    num_people_consulted <- sum(consults$num_consult)
+    num_people_consulted <- sum(consults$num_consult[
+                                !is.na(consults$num_consult)])
     num_departments <- length(unique(consults$department))
     
     condition <- check_all()
@@ -410,17 +430,33 @@ shinyServer(function(input, output) {
     #read in the user data
     consults <- Sortie_consults() #return Sortie function
     
-    fig <- ggplotly(
-      consults %>% group_by(week, year) %>%
-        count(week) %>% 
+    weekly_data <- consults %>% group_by(week,year) %>%
+      count(week)
+    
+    
+    #create month labels
+    
+    month <- seq(as.Date("2020-01-01"), 
+                 as.Date("2020-12-01"), 
+                 by = "1 month")
+    #splits of when each week count corresponds to change in month
+    month_numeric <- as.numeric(format(month, format = "%U"))
+    #string labels
+    month_label <- format(month, format = "%b")
+    
+    #plot
+    fig1 <- ggplotly(
+      weekly_data %>% 
         ggplot(aes(x = week, y = n, fill = year)) +
-        geom_bar(stat = "identity", position = 'dodge') +
+        geom_bar(stat='identity') +
         ggtitle("Weekly Consults") +
-        labs(y = "Number of Consults", x = "Week of the Year") +
-        theme_bw()
-    ) %>% config(displayModeBar = F) 
+        labs(x = NULL, y = "Number of Consults") +
+        theme_bw() +
+        scale_x_continuous(breaks = month_numeric, 
+                           labels = month_label)
+    )
 
-    return(fig)
+    return(fig1)
     
   })
   
@@ -435,6 +471,10 @@ shinyServer(function(input, output) {
     #read in the user data
     consults <- Sortie_consults() #return Sortie function
     
+    weekly_data <- consults %>% 
+      group_by(week_of_quarter, year) %>%
+      count(week_of_quarter)
+    
     #get the selected quarter
     q <- get_quarter()
     
@@ -442,19 +482,58 @@ shinyServer(function(input, output) {
                    q," Quarter)", sep = '')
     
     fig <- ggplotly(
-      consults %>% group_by(week_of_quarter, year) %>%
-        count(week) %>% 
+      weekly_data %>% 
         ggplot(aes(x = week_of_quarter, y = n, fill = year)) +
-        geom_bar(stat = "identity", position = 'dodge') +
+        geom_bar(stat = "identity") +
         ggtitle(title) +
         xlim(0,11) +
         labs(y = "Number of Consults", x = "Week") +
-        theme_bw()
+        theme_bw() +
+        scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8,9,10,11))
     ) %>% config(displayModeBar = F) 
     
     return(fig)
     
   })
+  
+  
+  ## instruction by week of quarter
+  
+  output$intra_quarter_instruction <- renderPlotly({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
+    #read in the user data
+    instruction <- Sortie_instruction() #return Sortie function
+    
+    weekly_data <- instruction %>% 
+      group_by(week_of_quarter, year) %>%
+      count(week_of_quarter)
+    
+    #get the selected quarter
+    q <- get_quarter()
+    
+    title <- paste("Instruction Events per week of the Quarter (",
+                   q," Quarter)", sep = '')
+    
+    fig <- ggplotly(
+      weekly_data %>% 
+        ggplot(aes(x = week_of_quarter, y = n, fill = year)) +
+        geom_bar(stat = "identity") +
+        ggtitle(title) +
+        xlim(1,10) +
+        labs(y = "Number of Instruction Events", x = "Week") +
+        theme_bw() +
+        scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9,10))
+    ) %>% config(displayModeBar = F) 
+    
+    return(fig)
+    
+  })
+  
   
   
   ## instruction over time
@@ -468,32 +547,37 @@ shinyServer(function(input, output) {
     #read in df
     instruction <- Sortie_instruction()
     
-    #ensure date class
-    #instruction$date <- mdy(instruction$date)
-    
-    #lets make a couple fake events by duplicating observations
-    instruction <- rbind(instruction, instruction[3,], instruction[4,],
-                         instruction[7,], instruction[7,])
+    weekly_data <- instruction %>% group_by(week,year) %>%
+      count(week)
     
     #make daily events count
-    instruction <- instruction %>% group_by(date) %>%
-      mutate(daily_instruction_events = n())
+    #instruction <- instruction %>% group_by(date) %>%
+    #  mutate(daily_instruction_events = n())
     
     #make daily people count
-    instruction <- instruction %>% group_by(date) %>%
-      mutate(daily_people_instructed = sum(num_attendants)) 
+    #instruction <- instruction %>% group_by(date) %>%
+    #  mutate(daily_people_instructed = sum(num_attendants)) 
+    
+    #create month labels
+    month <- seq(as.Date("2020-01-01"), 
+                 as.Date("2020-12-01"), 
+                 by = "1 month")
+    #splits of when each week count corresponds to change in month
+    month_numeric <- as.numeric(format(month, format = "%U"))
+    #string labels
+    month_label <- format(month, format = "%b")
    
     #plot
     fig1 <- ggplotly(
-      instruction %>% group_by(date) %>% count(date) %>%
-        ggplot(aes(x = date, y= n, fill = n)) +
-        geom_bar(stat = 'identity') +
-        ggtitle("Daily Instruction Events") +
+      weekly_data %>% 
+        ggplot(aes(x = week, y = n, fill = year)) +
+        geom_bar(stat='identity') +
+        ggtitle("Weekly Instruction Events") +
         labs(x = NULL, y = "Number of Instruction Events") +
-        #ylim(0,5) +
         theme_bw() +
-        theme(legend.position="none")
-      ) %>% config(displayModeBar = F) 
+        scale_x_continuous(breaks = month_numeric, 
+                           labels = month_label)
+    )
     
     return(fig1)
   })
@@ -543,7 +627,7 @@ week_to_quarter <- function(df){
   # while browsing academic calendar to quickly get week cutoffs
   
   #init empty quarter column
-  df$quarter <- c()
+  df$quarter <- NA
   
   #for 2019
   df$quarter[df$week >=2 & df$week <= 12 &
@@ -598,7 +682,7 @@ week_to_quarter <- function(df){
 week_of_quarter <- function(df){
   
   #init empty column
-  df$week_of_quarter <- c()
+  df$week_of_quarter <- NA
   
   #for 2019
   df$week_of_quarter[df$quarter == "WI" & df$year == 2019] <- 
@@ -642,6 +726,19 @@ week_of_quarter <- function(df){
     df$week[df$quarter == "SU" & df$year == 2022] - 25
   df$week_of_quarter[df$quarter == "FA" & df$year == 2022] <-
     df$week[df$quarter == "FA" & df$year == 2022] - 38 #we want a 0 week here
+  
+  return(df)
+}
+
+
+clean_years <- function(df){
+  
+  #drop rows from before 2018 for now
+  df <- df[df$year >= 2018,]
+  
+  df$year[df$year == 2091] <- 2019
+  df$year[df$year == 2109] <- 2019
+  df$year[df$year == 2921] <- 2021
   
   return(df)
 }

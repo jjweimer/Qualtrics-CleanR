@@ -6,6 +6,10 @@ library(ggplot2)
 library(shinythemes)
 library(DT) #for better tables
 
+#max file size 30mb for upload
+options(shiny.maxRequestSize = 30*1024^2)
+
+
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(theme = shinytheme("cosmo"),
                   
@@ -78,11 +82,15 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                              tags$hr(),
                              plotlyOutput("intra_quarter_consults"),
                              tags$hr(),
-                             plotlyOutput("consults_per_week")
+                             plotlyOutput("consults_per_week"),
+                             tags$hr(),
+                             DT::dataTableOutput("consults_data_DT")
                     ),
                     tabPanel("Instruction",
                              tags$hr(),
                              textOutput("instruction_stats"),
+                             tags$hr(),
+                             plotlyOutput("intra_quarter_instruction"),
                              tags$hr(),
                              plotlyOutput("instruction_time_plot"),
                              tags$hr(),
@@ -95,6 +103,6 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                              DT::dataTableOutput("outreach_data_DT"),
                              )
                     )
-      ) #end main panel
+      ) #end main panel   
     
 ))
