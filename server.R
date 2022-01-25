@@ -454,7 +454,11 @@ shinyServer(function(input, output) {
         theme_bw() +
         scale_x_continuous(breaks = month_numeric, 
                            labels = month_label)
-    )
+    ) %>%
+      config(displaylogo = FALSE) %>%
+      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
+                                        "lasso2d",
+                                        "pan2d","autoscale2d","select2d"))
 
     return(fig1)
     
@@ -490,7 +494,11 @@ shinyServer(function(input, output) {
         labs(y = "Number of Consults", x = "Week") +
         theme_bw() +
         scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8,9,10,11))
-    ) %>% config(displayModeBar = F) 
+    ) %>%
+      config(displaylogo = FALSE) %>%
+      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
+                                        "lasso2d",
+                                        "pan2d","autoscale2d","select2d"))
     
     return(fig)
     
@@ -528,7 +536,11 @@ shinyServer(function(input, output) {
         labs(y = "Number of Instruction Events", x = "Week") +
         theme_bw() +
         scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9,10))
-    ) %>% config(displayModeBar = F) 
+    ) %>%
+      config(displaylogo = FALSE) %>%
+      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
+                                        "zoom2d","lasso2d",
+                                        "pan2d","autoscale2d","select2d"))
     
     return(fig)
     
@@ -577,7 +589,11 @@ shinyServer(function(input, output) {
         theme_bw() +
         scale_x_continuous(breaks = month_numeric, 
                            labels = month_label)
-    )
+    ) %>%
+      config(displaylogo = FALSE) %>%
+      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
+                                        "zoom2d","lasso2d",
+                                        "pan2d","autoscale2d","select2d"))
     
     return(fig1)
   })
@@ -628,6 +644,18 @@ week_to_quarter <- function(df){
   
   #init empty quarter column
   df$quarter <- NA
+  
+  #for 2018
+  df$quarter[df$week >=2 & df$week <= 12 &
+               df$year == 2018] <- "WI"
+  df$quarter[df$week >=14 & df$week <= 24 & 
+               df$year == 2018] <- "SP"
+  df$quarter[df$week >=27 & df$week <= 36 &
+               df$year == 2018] <- "SU"
+  df$quarter[df$week >= 39 & df$week <= 50 &
+               df$year == 2018] <- "FA"
+  
+  
   
   #for 2019
   df$quarter[df$week >=2 & df$week <= 12 &
@@ -683,6 +711,16 @@ week_of_quarter <- function(df){
   
   #init empty column
   df$week_of_quarter <- NA
+  
+  #for 2019
+  df$week_of_quarter[df$quarter == "WI" & df$year == 2018] <- 
+    df$week[df$quarter == "WI" & df$year == 2018] - 1
+  df$week_of_quarter[df$quarter == "SP" & df$year == 2018] <- 
+    df$week[df$quarter == "SP" & df$year == 2018] - 13
+  df$week_of_quarter[df$quarter == "SU" & df$year == 2018] <- 
+    df$week[df$quarter == "SU" & df$year == 2018] - 26
+  df$week_of_quarter[df$quarter == "FA" & df$year == 2018] <- 
+    df$week[df$quarter == "FA" & df$year == 2018] - 39 #we want a 0 week here
   
   #for 2019
   df$week_of_quarter[df$quarter == "WI" & df$year == 2019] <- 

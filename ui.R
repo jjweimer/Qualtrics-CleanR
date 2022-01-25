@@ -76,13 +76,13 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                              tags$hr(),
                              textOutput("consults_stats"),
                              tags$hr(),
-                             numericInput("n","Minimum Count of Department:"
-                                          ,2,min = 1),
-                             plotlyOutput("consults_graph"),
-                             tags$hr(),
                              plotlyOutput("intra_quarter_consults"),
                              tags$hr(),
                              plotlyOutput("consults_per_week"),
+                             tags$hr(),
+                             numericInput("n","Minimum Count of Department:"
+                                          ,100,min = 1),
+                             plotlyOutput("consults_graph"),
                              tags$hr(),
                              DT::dataTableOutput("consults_data_DT")
                     ),
