@@ -15,8 +15,10 @@ shinyServer(function(input, output) {
   ### Cleaned user input Qualtrics Data by service type  ############
   ###################################################################
   
+  
   #clean instruction data, return data frame
   Sortie_instruction <- reactive({
+    
     inFile <- input$file1
     
     if (is.null(inFile))
@@ -74,14 +76,20 @@ shinyServer(function(input, output) {
       return(NULL)
     
     #read in the user data
-    user_data <- read.csv(inFile$datapath)
+    user_data <- read.csv(inFile$datapath, stringsAsFactors = FALSE)
     
     #now clean data for outreach_data
     outreach <- user_data %>% select(Q2,Q3, Q156, Q198, Q174, Q184, 
                                      Q194, Q202, Q196)
     outreach <- outreach[outreach$Q3 == "Outreach",]
+    
     colnames(outreach) <- c("entered_by","service","date","type","home_program",
                             "attendees","status","duration","time_prep")
+    
+    #drop empty obs
+    outreach <- outreach[!is.na(outreach$date),]
+    outreach <- outreach[!outreach$date == "",]
+    
     #ensure date data type
     outreach$date <- mdy(outreach$date)
     #make attendees numeric
@@ -102,6 +110,10 @@ shinyServer(function(input, output) {
     
     #week of quarter
     outreach <- week_of_quarter(outreach)
+    
+    #for some reason without this, it returns a ton of missing values as rows
+    #this should do nothing but is like integral somehow
+    outreach <- outreach[outreach$quarter %in% c("WI","SP","SU","FA", "Break"),]
     
     #filter to selected quarter
     if(input$quarter != "All"){
@@ -505,6 +517,49 @@ shinyServer(function(input, output) {
   })
   
   
+  
+  #consult locations
+  
+  output$consult_locations <- renderPlotly({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
+    #read in the user data
+    consults <- Sortie_consults() #return Sortie function
+    
+    #make location df
+    locations_data <- consults %>% 
+      group_by(location) %>% 
+      count(location)
+    
+    locations_data$location[
+      locations_data$location == 
+        "Teleconference session (e.g. Zoom, Skype, IM)"] <- "Teleconference"
+    
+    #plot
+    
+    fig <- ggplotly(
+            locations_data %>% 
+            ggplot(aes(x = n, y = reorder(location,n), fill = location)) +
+            geom_col() +
+              labs(y= NULL) +
+              ggtitle("Most Frequent Consult Locations") +
+            theme_bw() +
+            theme(legend.position = 'none')
+            ) %>%
+      config(displaylogo = FALSE) %>%
+      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
+                                        "lasso2d",
+                                        "pan2d","autoscale2d","select2d"))
+    
+    return(fig)
+    
+  })
+  
+  
   ## instruction by week of quarter
   
   output$intra_quarter_instruction <- renderPlotly({
@@ -535,7 +590,7 @@ shinyServer(function(input, output) {
         xlim(1,10) +
         labs(y = "Number of Instruction Events", x = "Week") +
         theme_bw() +
-        scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9,10))
+        scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9,10,11))
     ) %>%
       config(displaylogo = FALSE) %>%
       config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",

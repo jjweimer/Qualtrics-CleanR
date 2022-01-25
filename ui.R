@@ -39,7 +39,8 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                       "2022" = "2022",
                       "2021" = "2021",
                       "2020" = "2020",
-                      "2019" = "2019")),
+                      "2019" = "2019",
+                      "2018" = "2018")),
         tags$hr(),
         # Button
         downloadButton("downloadConsults", "Download Consults"),
@@ -63,7 +64,9 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                  filter as you wish, or set both options to \'All\' for all 
                  observations"),
         helpText("Tip: Plots are interactive! Hover your mouse over observations
-                 to learn more about the data."),
+                 to learn more about the data. You may also use the toolbars in 
+                 the top-right corner of each plot to save the plot as an image
+                 to your computer."),
         tags$hr() #,
         #helpText("Developed by Joshua Weimer for the UCSD Data and GIS Lab.")
         
@@ -84,6 +87,9 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                                           ,100,min = 1),
                              plotlyOutput("consults_graph"),
                              tags$hr(),
+                             #this plot is shy ??
+                             #plotlyOutput("consult_locations"),
+                             #tags$hr(),
                              DT::dataTableOutput("consults_data_DT")
                     ),
                     tabPanel("Instruction",
