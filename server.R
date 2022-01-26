@@ -79,12 +79,12 @@ shinyServer(function(input, output) {
     user_data <- read.csv(inFile$datapath, stringsAsFactors = FALSE)
     
     #now clean data for outreach_data
-    outreach <- user_data %>% select(Q2,Q3, Q156, Q198, Q174, Q184, 
+    outreach <- user_data %>% select(Q2,Q3, Q156, Q198, Q174, Q182, Q184, 
                                      Q194, Q202, Q196)
     outreach <- outreach[outreach$Q3 == "Outreach",]
     
     colnames(outreach) <- c("entered_by","service","date","type","home_program",
-                            "attendees","status","duration","time_prep")
+                            "topic","attendees","status","duration","time_prep")
     
     #drop empty obs
     outreach <- outreach[!is.na(outreach$date),]
@@ -303,43 +303,6 @@ shinyServer(function(input, output) {
   ### Render Tables  ############
   ###################################################################
   
-  #render instruction data frame
-  output$instruction_data <- renderTable({
-    
-    #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
-      return(NULL)
-    }
-    
-    #read in the user data
-    instruction_data <- Sortie_instruction() #return Sortie function
-    #make date back to char for better output
-    instruction_data$date <- as.character(instruction_data$date)
-    
-    #returns df
-    return(instruction_data)
-    
-  })
-  
-  #render outreach data frame
-  output$outreach_data <- renderTable({
-    
-    #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
-      return(NULL)
-    }
-    
-    #read in the user data
-    outreach <- Sortie_outreach() #return Sortie function
-    
-    #make date char
-    outreach$date <- as.character(outreach$date)
-    
-    #returns df
-    return(outreach)
-  })
-  
-  
   #instruction DT table
   #
   output$instruction_data_DT <- DT::renderDataTable(Sortie_instruction(),
@@ -363,6 +326,30 @@ shinyServer(function(input, output) {
                                         options = list(scrollX = TRUE),
                                         rownames = FALSE)
   
+  #info/RAD service counts
+  desk_serv_counts <- reactive({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
+    #read in the user data
+    info <- Sortie_info_RAD() #return Sortie function
+    
+    #service counts
+    serv_counts <- info %>% group_by(service) %>% count(service)
+    serv_counts <- arrange(serv_counts,-n)
+    
+    return(serv_counts)
+    
+  })
+  
+  output$serv_counts_DT <- DT::renderDataTable(desk_serv_counts(),
+                                          options = list(scrollX = TRUE),
+                                          rownames = FALSE)
+  
+  
   ###################################################################
   ###### Text Summary Statistics using Cleaned data  ############
   ###################################################################
@@ -381,8 +368,8 @@ shinyServer(function(input, output) {
     #now the text render part
     ins_num_activities <- nrow(instruction_data)
     ins_num_groups<- length(unique(instruction_data$activity))
-    ins_num_students_reached <- sum(instruction_data$num_attendantsp[
-                                  !is.na(instruction$num_attendants)])
+    ins_num_students_reached <- sum(instruction_data$num_attendants[
+                                  !is.na(instruction_data$num_attendants)])
     #return text
     return(paste("There were",ins_num_activities,
                  "instruction acitivites reaching",ins_num_groups,
@@ -444,6 +431,31 @@ shinyServer(function(input, output) {
                    num_people_consulted, "people in", 
                    num_departments, "unique departments"))
     }
+    
+  })
+  
+  output$info_stats <- renderText({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
+    #read in the user data
+    info <- Sortie_info_RAD() #return Sortie function
+    
+    #total desk services
+    num_services <- nrow(info)
+    
+    #total RAD
+    num_RAD <- nrow(info[info$desk == "RAD",])
+    
+    #total info desk
+    num_info <- nrow(info[info$desk == "Info Desk",])
+    
+    return(paste("There were", num_services, "services. Of those,", num_RAD,
+                 "were from  the Research Assistance Desk, and", num_info, 
+                 "were from the Info Desk."))
     
   })
   
@@ -743,7 +755,7 @@ shinyServer(function(input, output) {
       weekly_data %>% 
         ggplot(aes(x = week, y = n, fill = year)) +
         geom_bar(stat='identity') +
-        ggtitle("Weekly Info / RAD services") +
+        ggtitle("Weekly Research Assistance / Info Desk Services") +
         labs(x = NULL, y = "Number of Services") +
         theme_bw() +
         scale_x_continuous(breaks = month_numeric, 
