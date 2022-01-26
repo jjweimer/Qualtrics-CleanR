@@ -49,6 +49,8 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
         helpText("To download clean Instruction data"),
         downloadButton("downloadOutreach", "Download Outreach"),
         helpText("To download clean Outreach data"),
+        downloadButton("downloadInfo_RAD", "Download Info/RAD"),
+        helpText("To download clean Info / Research Assistance Desk Data"),
         tags$hr(),
         helpText("This is an applet to clean user uploaded service stats Qualtrics
                   data.
@@ -107,6 +109,14 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                              textOutput("outreach_stats"),
                              tags$hr(),
                              DT::dataTableOutput("outreach_data_DT"),
+                             ),
+                    tabPanel("Info / RAD",
+                             tags$hr(),
+                             h3("RAD / Info Desk Statistics"),
+                             tags$hr(),
+                             plotlyOutput("info_time_plot"),
+                             tags$hr(),
+                             DT::dataTableOutput("info_DT")
                              )
                     )
       ) #end main panel   

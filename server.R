@@ -220,6 +220,60 @@ shinyServer(function(input, output) {
     return(consults)
   })
   
+  
+  Sortie_info_RAD <- reactive({
+    
+    inFile <- input$file1
+    
+    if (is.null(inFile))
+      return(NULL)
+    
+    #read in the user data
+    user_data <- read.csv(inFile$datapath)
+    
+    #now clean for info/RAD data
+    info <- user_data[user_data$Q3 == "",c("RecordedDate","Q2","Q26",
+                                           "Q27","Q31")]
+    
+    #merge columns 27 and 31 into new column
+    info$pasted <- paste(info$Q27,info$Q31, sep = "")
+    
+    #date time conversion
+    info$date_time <- as.POSIXct(info$RecordedDate, 
+                             format = "%m/%d/%Y %H:%M", 
+                             tz = "America/Los_Angeles")
+    
+    #extract year and week
+    info$year <-  format(info$date_time,format =  '%Y')
+    info$week <- isoweek(info$date_time)
+    
+    
+    #select down to the rows we want, and rename cols
+    info <- info %>% select(c("year","week","date_time","Q2","pasted"))
+    colnames(info) <- c("year","week","date_time","desk","service")
+    
+    #week of quarter and quarter
+    
+    info <- week_to_quarter(info)
+    info <- week_of_quarter(info)
+    
+    
+    #filter to selected quarter
+    if(input$quarter != "All"){
+      info <- info %>% filter(quarter == input$quarter)
+    }
+    
+    #filter to selected year
+    if(input$year != "All"){
+      y <- as.numeric(input$year)
+      info <- info %>% filter(year == y)
+    }
+    
+    #return our guy
+    return(info)
+    
+  })
+  
   #############################################################
   ##### Returning updated inputs ##############################
   
@@ -302,6 +356,12 @@ shinyServer(function(input, output) {
   output$consults_data_DT <- DT::renderDataTable(Sortie_consults(),
                                                  options = list(scrollX = TRUE),
                                                  rownames = FALSE)
+  
+  #info/RAD
+  
+  output$info_DT <- DT::renderDataTable(Sortie_info_RAD(),
+                                        options = list(scrollX = TRUE),
+                                        rownames = FALSE)
   
   ###################################################################
   ###### Text Summary Statistics using Cleaned data  ############
@@ -653,6 +713,51 @@ shinyServer(function(input, output) {
     return(fig1)
   })
   
+  
+  #info/RAD services over time
+  
+  output$info_time_plot <- renderPlotly({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
+    #read in df
+    info <- Sortie_info_RAD()
+    
+    weekly_data <- info %>% group_by(week,year) %>%
+      count(week)
+    
+    #create month labels
+    month <- seq(as.Date("2020-01-01"), 
+                 as.Date("2020-12-01"), 
+                 by = "1 month")
+    #splits of when each week count corresponds to change in month
+    month_numeric <- as.numeric(format(month, format = "%U"))
+    #string labels
+    month_label <- format(month, format = "%b")
+    
+    #plot
+    fig1 <- ggplotly(
+      weekly_data %>% 
+        ggplot(aes(x = week, y = n, fill = year)) +
+        geom_bar(stat='identity') +
+        ggtitle("Weekly Info / RAD services") +
+        labs(x = NULL, y = "Number of Services") +
+        theme_bw() +
+        scale_x_continuous(breaks = month_numeric, 
+                           labels = month_label)
+    ) %>%
+      config(displaylogo = FALSE) %>%
+      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
+                                        "zoom2d","lasso2d",
+                                        "pan2d","autoscale2d","select2d"))
+    
+    return(fig1)
+    
+  })
+  
   #################################################
   ## FILE DOWNLOADS   #############################
   ################################################
@@ -684,6 +789,17 @@ shinyServer(function(input, output) {
       write.csv(Sortie_outreach(),file,row.names = FALSE)
     }
   )
+  
+  output$downloadInfo_RAD <- downloadHandler(
+    filename = function(){
+      paste('Info_RAD',input$quarter,input$year,'.csv', sep = '')
+    },
+    content = function(file){
+      write.csv(Sortie_info_RAD(),file,row.names = FALSE)
+    }
+  )
+  
+  
 })
 #####################################################################
 ############# END SERVER   ##########################################
