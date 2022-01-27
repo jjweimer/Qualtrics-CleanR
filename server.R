@@ -500,6 +500,37 @@ shinyServer(function(input, output) {
     
   })
   
+  output$gis_stats <- renderText({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
+    #read in the user data
+    gis_lab <- Sortie_data_gis() #return Sortie function
+    
+    #total  services
+    num_services <- nrow(gis_lab)
+    
+    #num_questions
+    num_questions <- nrow(gis_lab[gis_lab$entry_type == "Question Asked",])
+    
+    #how many GIS/study/Data uses
+    num_GIS <- nrow(gis_lab[gis_lab$visit_purpose == "GIS",])
+    num_study <- nrow(gis_lab[gis_lab$visit_purpose == "Study",])
+    num_data <- nrow(gis_lab[gis_lab$visit_purpose == "Data",])
+    
+    
+    return(paste("The Data & GIS Lab provided",num_services, "services during 
+                 the time specified. Of these,", num_questions, "were answered
+                 questions. The Lab had",num_study, "people visit to study,",
+                 num_GIS, "people visit for GIS services/software, and",
+                 num_data,"people visit for data services/software."))
+    
+  })
+  
+  
   #############################################
   ### PLOTS
   ################################################
