@@ -232,8 +232,8 @@ shinyServer(function(input, output) {
     user_data <- read.csv(inFile$datapath)
     
     #now clean for info/RAD data
-    info <- user_data[user_data$Q3 == "",c("RecordedDate","Q2","Q26",
-                                           "Q27","Q31")]
+    info <- user_data[user_data$Q2 %in% c("RAD","Info Desk"),
+                      c("RecordedDate","Q2","Q26","Q27","Q31")]
     #merge columns 27 and 31 into new column
     info$pasted <- paste(info$Q27,info$Q31, sep = "")
     

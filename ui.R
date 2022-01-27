@@ -14,7 +14,7 @@ options(shiny.maxRequestSize = 30*1024^2)
 shinyUI(fixedPage(theme = shinytheme("cosmo"),
                   
     #navbar
-    navbarPage("Qualtrics Consults/Instruction/Outreach Data Cleaner"),
+    navbarPage("Qualtrics Service Statistics Cleaner"),
                   
     # Alternative way to render title
     #titlePanel("Qualtrics Data Cleaner"),
