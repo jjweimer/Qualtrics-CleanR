@@ -11,7 +11,7 @@ options(shiny.maxRequestSize = 30*1024^2)
 
 
 # Define UI for application that draws a histogram
-shinyUI(fluidPage(theme = shinytheme("cosmo"),
+shinyUI(fixedPage(theme = shinytheme("cosmo"),
                   
     #navbar
     navbarPage("Qualtrics Consults/Instruction/Outreach Data Cleaner"),
@@ -51,6 +51,9 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
         helpText("To download clean Outreach data"),
         downloadButton("downloadInfo_RAD", "Download Info/RAD"),
         helpText("To download clean Info / Research Assistance Desk Data"),
+        #downloadDataGISLab
+        downloadButton("downloadDataGISLab", "Download Data & GIS"),
+        helpText("To download clean Data & GIS Lab Data"),
         tags$hr(),
         helpText("This is an applet to clean user uploaded service stats Qualtrics
                   data.
@@ -92,8 +95,8 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                              #this plot is shy ??
                              #plotlyOutput("consult_locations"),
                              #tags$hr(),
-                             DT::dataTableOutput("consults_data_DT")
-                    ),
+                             DT::dataTableOutput("consults_DT")
+                             ),
                     tabPanel("Instruction",
                              tags$hr(),
                              textOutput("instruction_stats"),
@@ -102,13 +105,13 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                              tags$hr(),
                              plotlyOutput("instruction_time_plot"),
                              tags$hr(),
-                             DT::dataTableOutput("instruction_data_DT")
+                             DT::dataTableOutput("instruction_DT")
                              ),
                     tabPanel("Outreach",
                              tags$hr(),
                              textOutput("outreach_stats"),
                              tags$hr(),
-                             DT::dataTableOutput("outreach_data_DT"),
+                             DT::dataTableOutput("outreach_DT"),
                              ),
                     tabPanel("Info / RAD",
                              tags$hr(),
@@ -119,7 +122,16 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                              plotlyOutput("info_time_plot"),
                              tags$hr(),
                              DT::dataTableOutput("info_DT")
-                             )
+                             ),
+                    tabPanel("Data & GIS Lab",
+                             tags$hr(),
+                             h3("Data & GIS Lab Statistics"),
+                             tags$hr(),
+                             plotlyOutput("week_of_quarter_gis_lab"),
+                             tags$hr(),
+                             plotlyOutput("gis_lab_per_week"),
+                             tags$hr(),
+                             DT::dataTableOutput("data_gis_DT"))
                     )
       ) #end main panel   
     
