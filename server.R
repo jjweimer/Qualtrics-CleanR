@@ -6,11 +6,9 @@ library(plotly)
 library(DT) #for better tables
 library(stringdist) #fuzzy mathching
 
-#require fuzzy mathc script
-
+#require fuzzy match, helper functions
 source('fuzzy_match.R', local = TRUE)
 source("week_quarter_helper.R", local = TRUE)
-
 
 #max file size 30mb for upload
 options(shiny.maxRequestSize = 30*1024^2)
@@ -21,8 +19,7 @@ shinyServer(function(input, output) {
   ###################################################################
   ### Cleaned user input Qualtrics Data by service type  ############
   ###################################################################
-  
-  
+
   #clean instruction data, return data frame
   Sortie_instruction <- reactive({
     
@@ -175,6 +172,9 @@ shinyServer(function(input, output) {
     #week of quarter
     consults <- week_of_quarter(consults)
     
+    #month-day
+    consults <- month_day(consults)
+    
     ## fuzzy match department names
     consults$fuzzy_department <- fuzzy_match(consults$department)
     
@@ -195,7 +195,6 @@ shinyServer(function(input, output) {
     
     return(consults)
   })
-  
   
   Sortie_info_RAD <- reactive({
     
@@ -297,6 +296,7 @@ shinyServer(function(input, output) {
   
   #############################################################
   ##### Returning updated inputs ##############################
+  #############################################################
   
   ###### check if "ALL" is selected
   check_all <- reactive({
@@ -320,7 +320,6 @@ shinyServer(function(input, output) {
   })
   
   #return n_category
-  
   return_n_category <- reactive({
     return(input$n_category)
   })
@@ -342,13 +341,11 @@ shinyServer(function(input, output) {
                                                  rownames = FALSE)
   
   #consults 
-  
   output$consults_DT <- DT::renderDataTable(Sortie_consults(),
                                                  options = list(scrollX = TRUE),
                                                  rownames = FALSE)
   
   #info/RAD
-  
   output$info_DT <- DT::renderDataTable(Sortie_info_RAD(),
                                         options = list(scrollX = TRUE),
                                         rownames = FALSE)
@@ -646,10 +643,7 @@ shinyServer(function(input, output) {
     
   })
   
-  
-  
   #consult locations
-  
   output$consult_locations <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
@@ -689,9 +683,7 @@ shinyServer(function(input, output) {
     
   })
   
-  
   ## consult categories
-  
   output$consult_categories <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
@@ -732,9 +724,7 @@ shinyServer(function(input, output) {
     
   })
   
-  
-  ## instruction by week of quarter
-  
+  ##instruction by week of quarter
   output$intra_quarter_instruction <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
@@ -773,8 +763,6 @@ shinyServer(function(input, output) {
     return(fig)
     
   })
-  
-  
   
   ## instruction over time
   output$instruction_time_plot <- renderPlotly({
@@ -827,9 +815,7 @@ shinyServer(function(input, output) {
     return(fig1)
   })
   
-  
   #info/RAD services over time
-  
   output$info_time_plot <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
@@ -873,7 +859,6 @@ shinyServer(function(input, output) {
     
   })
   
-  
   #week of quarter data and GIS lab use
   output$week_of_quarter_gis_lab <- renderPlotly({
     
@@ -913,7 +898,6 @@ shinyServer(function(input, output) {
     return(fig)
     
   })
-  
   
   #week of year data and gis lab use
   #num consults per week over time
@@ -960,8 +944,7 @@ shinyServer(function(input, output) {
     
   })
   
-  
-  
+
   #################################################
   ## FILE DOWNLOADS   #############################
   ################################################
@@ -1011,7 +994,6 @@ shinyServer(function(input, output) {
       write.csv(Sortie_data_gis(),file,row.names = FALSE)
     }
   )
-  
   
 })
 #####################################################################

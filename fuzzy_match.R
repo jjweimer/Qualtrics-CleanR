@@ -2,7 +2,9 @@ library(stringdist)
 library(dplyr)
 
 #define department names to match to
-department_names <- c("Aerospace Engineering",
+department_names <- c(
+                        #department names
+                      "Aerospace Engineering",
                       "Academic Internship Program",
                       "Alumni",
                       "Anthropology",
@@ -18,7 +20,6 @@ department_names <- c("Aerospace Engineering",
                       "Communication",
                       "Computer Science",
                       "Critical Gender Studies",
-                      #"Dean",
                       "Dance",
                       "Data Science",
                       "Economics",
@@ -33,11 +34,9 @@ department_names <- c("Aerospace Engineering",
                       "German Studies",
                       "Global Health",
                       "Global Policy and Strategy",
-                      "GPS",
                       "Public Health",
                       "History",
                       'Human Development Sciences',
-                      "HUM",
                       "International Studies",
                       "Italian Studies",
                       "Japanese Studies",
@@ -47,8 +46,6 @@ department_names <- c("Aerospace Engineering",
                       "Linguistics",
                       "Literature",
                       "Mathematics",
-                      "MCWP",
-                      "MMW",
                       "Medicine",
                       "Mechanical Engineering",
                       "Music",
@@ -65,7 +62,6 @@ department_names <- c("Aerospace Engineering",
                       "Russian and Soviet Studies",
                       "Scripps Institute of Oceanography",
                       "School of Medicine",
-                      "SIO",
                       "Sociology",
                       "Structural Engineering",
                       "Teaching and Learning Commons",
@@ -74,29 +70,95 @@ department_names <- c("Aerospace Engineering",
                       "Urban Studies and Planning",
                       "Visual Arts",
                       
+                      #dept codes
+                      
+                      "ANTH",
+                      "BENG",
+                      "BIOL",
+                      "CAT",
+                      "CENG",
+                      "CGS",
+                      "CHEM",
+                      "CHIN",
+                      "COGS",
+                      "COMM",
+                      "CONT",
+                      "CSE",
+                      "DOC",
+                      "DSC",
+                      "ECE",
+                      "ECON",
+                      "EDS",
+                      "ENVR",
+                      "ERC",
+                      "ESYS",
+                      "ETHN",
+                      "FILM",
+                      "FPMU",
+                      "GPS",
+                      "HDP",
+                      "HIST",
+                      "HMNR",
+                      "HUM",
+                      "ICAM",
+                      "INTL",
+                      "JAPN",
+                      "JUDA",
+                      "LATI",
+                      "LAWS",
+                      "LING",
+                      "LIT",
+                      "MAE",
+                      "MATH",
+                      "MMW",
+                      "MUIR",
+                      "MCWP",
+                      "MUS",
+                      "MGMT",
+                      "NENG",
+                      "POLI",
+                      "PHIL",
+                      "PHYS",
+                      "PSYC",
+                      "RELI",
+                      "REV",
+                      "RSM",
+                      "SE",
+                      "SIO",
+                      "SOC",
+                      "SOE",
+                      "STPA",
+                      "SXTH",
+                      "THEA",
+                      "TMC",
+                      "TWS",
+                      "USP",
+                      "VIS",
+                      "WARR",
+                      "WCWP",
+                      
                       #other
                       
                       "Off Campus",
-                      "non-UCSD"
+                      "non-UCSD",
+                      "SDSC",
+                      "SDCWA", #San Diego County Water Authority
+                      "SDSU",
+                      "USD"
                       )
 
-
+#function to be called in server.R
 fuzzy_match <- function(typo_list){
   
   #amatch from stringdist::
   indices <- amatch(x = typo_list, #things we want matched / regularized
-                    table = department_names, #table of correct namse
-                    method = "jw", #jaro winkler mathodology
-                    maxDist = 0.25)
+                    table = department_names, #table of correct names
+                    method = "jw", #jaro winkler methodology
+                    maxDist = 0.25 #unsure ideal dist, 0.5 seemed worse
+                    )
   
   ## assign to new obj
   matched_departments <- department_names[indices]
   
   return(matched_departments)
-  
 }
-
-#now lets test how well it works
-my_list <- c("econoMic", "Poli Science", "Psycology", "Dat SciENCE", "Busines", "Bio","physicSS", "Aero Engineering", "Rady")
-fuzzy_match(my_list)
-

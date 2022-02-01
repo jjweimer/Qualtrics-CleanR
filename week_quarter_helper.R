@@ -21,8 +21,6 @@ week_to_quarter <- function(df){
   df$quarter[df$week >= 39 & df$week <= 50 &
                df$year == 2018] <- "FA"
   
-  
-  
   #for 2019
   df$quarter[df$week >=2 & df$week <= 12 &
                df$year == 2019] <- "WI"
@@ -42,7 +40,6 @@ week_to_quarter <- function(df){
                df$year == 2020] <- "SU"
   df$quarter[df$week >= 40 & df$week <= 51 &
                df$year == 2020] <- "FA"
-  
   
   #for 2021
   df$quarter[df$week >=1 & df$week <= 11 &
@@ -98,7 +95,6 @@ week_of_quarter <- function(df){
   df$week_of_quarter[df$quarter == "FA" & df$year == 2019] <- 
     df$week[df$quarter == "FA" & df$year == 2019] - 39 #we want a 0 week here
   
-  
   #for 2020
   df$week_of_quarter[df$quarter == "WI" & df$year == 2020] <- 
     df$week[df$quarter == "WI" & df$year == 2020] - 1
@@ -109,7 +105,6 @@ week_of_quarter <- function(df){
   df$week_of_quarter[df$quarter == "FA" & df$year == 2020] <- 
     df$week[df$quarter == "FA" & df$year == 2020] - 40 #we want a 0 week here
   
-  
   #for 2021
   df$week_of_quarter[df$quarter == "WI" & df$year == 2021] <- 
     df$week[df$quarter == "WI" & df$year == 2021] - 0
@@ -119,7 +114,6 @@ week_of_quarter <- function(df){
     df$week[df$quarter == "SU" & df$year == 2021] - 25
   df$week_of_quarter[df$quarter == "FA" & df$year == 2021] <-
     df$week[df$quarter == "FA" & df$year == 2021] - 38 #we want a 0 week here
-  
   
   #for 2022
   df$week_of_quarter[df$quarter == "WI" & df$year == 2022] <- 
@@ -134,7 +128,14 @@ week_of_quarter <- function(df){
   return(df)
 }
 
+#get month-days
+#format(date, format = "%m-%d")
+month_day <- function(df){
+  df$month_day <- format(df$date, format= "%m-%d")
+  return(df)
+}
 
+#manually clean weird year inputs
 clean_years <- function(df){
   
   #drop rows from before 2018 for now
