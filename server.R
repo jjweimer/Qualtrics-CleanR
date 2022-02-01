@@ -58,6 +58,9 @@ shinyServer(function(input, output) {
     #week of quarter
     instruction <- week_of_quarter(instruction)
     
+    #month-day
+    instruction <- month_day(instruction)
+    
     #filter to selected quarter
     if(input$quarter != "All"){
       instruction <- instruction %>% filter(quarter == input$quarter)
@@ -114,6 +117,9 @@ shinyServer(function(input, output) {
     
     #week of quarter
     outreach <- week_of_quarter(outreach)
+    
+    #month-day
+    outreach <- month_day(outreach)
     
     #for some reason without this, it returns a ton of missing values as rows
     #this should do nothing but is like integral somehow
