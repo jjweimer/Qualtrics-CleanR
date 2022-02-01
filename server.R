@@ -4,6 +4,13 @@ library(dplyr)
 library(ggplot2)
 library(plotly)
 library(DT) #for better tables
+library(stringdist) #fuzzy mathching
+
+#require fuzzy mathc script
+
+source('fuzzy_match.R', local = TRUE)
+source("week_quarter_helper.R", local = TRUE)
+
 
 #max file size 30mb for upload
 options(shiny.maxRequestSize = 30*1024^2)
@@ -168,39 +175,8 @@ shinyServer(function(input, output) {
     #week of quarter
     consults <- week_of_quarter(consults)
     
-    #now deal with the departments. Lots of departments have multiple versions
-    #of the dept name in the file (example, Non-UCSD and Not UCSD or 
-    #Communication and Communications). 
-    
-    #fix communications
-    consults$department[consults$department %in% 
-            c("Communication",
-            "Communications")] <- "Communications"
-    #fix non-ucsd affiliations
-    consults$department[consults$department %in% 
-            c("Non-UCSD (recent grad)",
-              "Not UCSD",
-              "UCSD Alumni")] <- "Non-UCSD"
-    #fix Data Science
-    consults$department[consults$department %in% 
-            c("Data science", 
-              "Data Science & Engineering")] <- "Data Science"
-    #fix GPS
-    consults$department[consults$department %in%
-        c("GPS", "Global Policy and Strategy", 
-          "Global Policy and Strategy",
-          "Global policy and Strategy", 
-          "Global Policy and Stragegy")] <- "School of Global Policy and Strategy"
-    
-    #fix Business Analytics
-    consults$department[consults$department %in% 
-            c("Business Intelligence Analysis (Extension)",
-              "Business Intelligence Analysis/Extension", 
-              "Business Analytics")] <- "Business Intelligence Analysis"
-    #fix medicine
-    consults$department[consults$department %in% 
-            c("School of Medicine",
-              "Medicine ", "Med School")] <- "Medicine"
+    ## fuzzy match department names
+    consults$fuzzy_department <- fuzzy_match(consults$department)
     
     #filter to selected quarter
     if(input$quarter != "All"){
@@ -343,6 +319,12 @@ shinyServer(function(input, output) {
     return(input$n)
   })
   
+  #return n_category
+  
+  return_n_category <- reactive({
+    return(input$n_category)
+  })
+  
   
   ###################################################################
   ### Render Tables  ############
@@ -467,7 +449,7 @@ shinyServer(function(input, output) {
     num_consults <- nrow(consults)
     num_people_consulted <- sum(consults$num_consult[
                                 !is.na(consults$num_consult)])
-    num_departments <- length(unique(consults$department))
+    num_departments <- length(unique(consults$fuzzy_department))
     
     return(paste("There were",num_consults, "consults reaching",
                    num_people_consulted, "people in", 
@@ -535,7 +517,7 @@ shinyServer(function(input, output) {
   ### PLOTS
   ################################################
   
-  #consults department counts
+  #consults fuzzy department counts
   output$consults_graph <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
@@ -547,21 +529,24 @@ shinyServer(function(input, output) {
     consults <- Sortie_consults() #return Sortie function
     
     #drop NA departments
-    consults <- consults[is.na(consults$department)== FALSE,]
-    
+    consults <- consults[!is.na(consults$fuzzy_department),]
+  
+    ##get dept counts
+    dept_counts <- consults %>% group_by(fuzzy_department) %>%
+      count(fuzzy_department) %>% arrange(-n)
+   
     #let user select minimum n of dept
-    n <- return_n()
-    consults <- consults[consults$dept_consult_count >= n,]
-    
+    n_department <- return_n()
+    #filter for n 
+    dept_counts <- dept_counts[dept_counts$n >= n_department,]
     
     #make the title  reactive to n
     title <- paste("Most Consulted Departments (n >= ", 
-                   n,")" , sep = '')
+                   n_department,")" , sep = '')
     
     fig <- ggplotly(
-      consults %>% group_by(department) %>%
-      count(department) %>%
-      ggplot(aes(x = reorder(department,n), y = n, fill = n)) +
+      dept_counts %>%
+      ggplot(aes(x = reorder(fuzzy_department,n), y = n, fill = n)) +
       geom_col(alpha = 1) +
       #geom_text(aes(label = n), hjust = -1) +
       coord_flip() +
@@ -698,6 +683,49 @@ shinyServer(function(input, output) {
       config(displaylogo = FALSE) %>%
       config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
                                         "lasso2d",
+                                        "pan2d","autoscale2d","select2d"))
+    
+    return(fig)
+    
+  })
+  
+  
+  ## consult categories
+  
+  output$consult_categories <- renderPlotly({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
+    #read in the user data
+    consults <- Sortie_consults() #return Sortie function
+    
+    ## consults categories
+    categories <- consults %>% group_by(category) %>% 
+      count(category) %>% arrange(-n)
+    
+    
+    
+    #let user select minimum n of dept
+    n_category <- return_n_category()
+    categories <- categories[categories$n >= n_category,]
+    
+    # plot as col plot
+    fig <- ggplotly(
+      categories[categories$n > 100,] %>%
+      ggplot(aes(x = reorder(category,n), y = n, fill = n)) +
+      geom_col() +
+      coord_flip() +
+      ggtitle("Consult Categories") +
+      theme_bw() +
+      labs(x = NULL, y = "count") +
+      theme(legend.position="none")
+    ) %>%
+      config(displaylogo = FALSE) %>%
+      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
+                                        "zoom2d","lasso2d",
                                         "pan2d","autoscale2d","select2d"))
     
     return(fig)
@@ -988,151 +1016,3 @@ shinyServer(function(input, output) {
 })
 #####################################################################
 ############# END SERVER   ##########################################
-####################################################################
-########## HELPER FUNCTIONS ########################################
-###################################################################
-
-## Helper function for determining quarters by year
-week_to_quarter <- function(df){
-  
-  #use isoweek(mdy("12/14/19")) (month/day/year) (needs lubridate)
-  # while browsing academic calendar to quickly get week cutoffs
-  
-  #init empty quarter column
-  df$quarter <- NA
-  
-  #for 2018
-  df$quarter[df$week >=2 & df$week <= 12 &
-               df$year == 2018] <- "WI"
-  df$quarter[df$week >=14 & df$week <= 24 & 
-               df$year == 2018] <- "SP"
-  df$quarter[df$week >=27 & df$week <= 36 &
-               df$year == 2018] <- "SU"
-  df$quarter[df$week >= 39 & df$week <= 50 &
-               df$year == 2018] <- "FA"
-  
-  
-  
-  #for 2019
-  df$quarter[df$week >=2 & df$week <= 12 &
-               df$year == 2019] <- "WI"
-  df$quarter[df$week >=14 & df$week <= 24 & 
-               df$year == 2019] <- "SP"
-  df$quarter[df$week >=27 & df$week <= 36 &
-               df$year == 2019] <- "SU"
-  df$quarter[df$week >= 39 & df$week <= 50 &
-               df$year == 2019] <- "FA"
-  
-  #for 2020
-  df$quarter[df$week >=2 & df$week <= 12 &
-               df$year == 2020] <- "WI"
-  df$quarter[df$week >=14 & df$week <= 24 & 
-               df$year == 2020] <- "SP"
-  df$quarter[df$week >=27 & df$week <= 36 &
-               df$year == 2020] <- "SU"
-  df$quarter[df$week >= 40 & df$week <= 51 &
-               df$year == 2020] <- "FA"
-  
-  
-  #for 2021
-  df$quarter[df$week >=1 & df$week <= 11 &
-               df$year == 2021] <- "WI"
-  df$quarter[df$week >=13 & df$week <= 23 & 
-               df$year == 2021] <- "SP"
-  df$quarter[df$week >=26 & df$week <= 35 &
-               df$year == 2021] <- "SU"
-  df$quarter[df$week >= 38 & df$week <= 49 &
-               df$year == 2021] <- "FA"
-  
-  #for 2022
-  df$quarter[df$week >=1 & df$week <= 11 &
-               df$year == 2022] <- "WI"
-  df$quarter[df$week >=13 & df$week <= 23 & 
-               df$year == 2022] <- "SP"
-  df$quarter[df$week >=26 & df$week <= 35 &
-               df$year == 2022] <- "SU"
-  df$quarter[df$week >= 38 & df$week <= 49 &
-               df$year == 2022] <- "FA"
-  
-  #all other are breaks
-  df$quarter[is.na(df$quarter)] <- "Break"
-  
-  return(df)
-}
-
-#######
-## week of quarter
-
-week_of_quarter <- function(df){
-  
-  #init empty column
-  df$week_of_quarter <- NA
-  
-  #for 2019
-  df$week_of_quarter[df$quarter == "WI" & df$year == 2018] <- 
-    df$week[df$quarter == "WI" & df$year == 2018] - 1
-  df$week_of_quarter[df$quarter == "SP" & df$year == 2018] <- 
-    df$week[df$quarter == "SP" & df$year == 2018] - 13
-  df$week_of_quarter[df$quarter == "SU" & df$year == 2018] <- 
-    df$week[df$quarter == "SU" & df$year == 2018] - 26
-  df$week_of_quarter[df$quarter == "FA" & df$year == 2018] <- 
-    df$week[df$quarter == "FA" & df$year == 2018] - 39 #we want a 0 week here
-  
-  #for 2019
-  df$week_of_quarter[df$quarter == "WI" & df$year == 2019] <- 
-    df$week[df$quarter == "WI" & df$year == 2019] - 1
-  df$week_of_quarter[df$quarter == "SP" & df$year == 2019] <- 
-    df$week[df$quarter == "SP" & df$year == 2019] - 13
-  df$week_of_quarter[df$quarter == "SU" & df$year == 2019] <- 
-    df$week[df$quarter == "SU" & df$year == 2019] - 26
-  df$week_of_quarter[df$quarter == "FA" & df$year == 2019] <- 
-    df$week[df$quarter == "FA" & df$year == 2019] - 39 #we want a 0 week here
-  
-  
-  #for 2020
-  df$week_of_quarter[df$quarter == "WI" & df$year == 2020] <- 
-    df$week[df$quarter == "WI" & df$year == 2020] - 1
-  df$week_of_quarter[df$quarter == "SP" & df$year == 2020] <- 
-    df$week[df$quarter == "SP" & df$year == 2020] - 13
-  df$week_of_quarter[df$quarter == "SU" & df$year == 2020] <- 
-    df$week[df$quarter == "SU" & df$year == 2020] - 26
-  df$week_of_quarter[df$quarter == "FA" & df$year == 2020] <- 
-    df$week[df$quarter == "FA" & df$year == 2020] - 40 #we want a 0 week here
-  
-  
-  #for 2021
-  df$week_of_quarter[df$quarter == "WI" & df$year == 2021] <- 
-    df$week[df$quarter == "WI" & df$year == 2021] - 0
-  df$week_of_quarter[df$quarter == "SP" & df$year == 2021] <-
-    df$week[df$quarter == "SP" & df$year == 2021] - 12
-  df$week_of_quarter[df$quarter == "SU" & df$year == 2021] <-
-    df$week[df$quarter == "SU" & df$year == 2021] - 25
-  df$week_of_quarter[df$quarter == "FA" & df$year == 2021] <-
-    df$week[df$quarter == "FA" & df$year == 2021] - 38 #we want a 0 week here
-  
-  
-  #for 2022
-  df$week_of_quarter[df$quarter == "WI" & df$year == 2022] <- 
-    df$week[df$quarter == "WI" & df$year == 2022] - 0
-  df$week_of_quarter[df$quarter == "SP" & df$year == 2022] <-
-    df$week[df$quarter == "SP" & df$year == 2022] - 12
-  df$week_of_quarter[df$quarter == "SU" & df$year == 2022] <-
-    df$week[df$quarter == "SU" & df$year == 2022] - 25
-  df$week_of_quarter[df$quarter == "FA" & df$year == 2022] <-
-    df$week[df$quarter == "FA" & df$year == 2022] - 38 #we want a 0 week here
-  
-  return(df)
-}
-
-
-clean_years <- function(df){
-  
-  #drop rows from before 2018 for now
-  df <- df[df$year >= 2018,]
-  
-  df$year[df$year == 2091] <- 2019
-  df$year[df$year == 2109] <- 2019
-  df$year[df$year == 2921] <- 2021
-  
-  return(df)
-}

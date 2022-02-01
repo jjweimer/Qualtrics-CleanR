@@ -3,17 +3,22 @@ library(dplyr)
 
 #define department names to match to
 department_names <- c("Aerospace Engineering",
+                      "Academic Internship Program",
+                      "Alumni",
                       "Anthropology",
+                      "Archaeology",
                       "Bioengineering",
                       "Biological Sciences",
                       "Biochemistry",
+                      "CAT (Sixth College)",
                       "Chemistry",
                       "Chinese Studies",
                       "Classical Studies",
                       "Cognitive Science",
                       "Communication",
-                      "Conputer Science",
+                      "Computer Science",
                       "Critical Gender Studies",
+                      #"Dean",
                       "Dance",
                       "Data Science",
                       "Economics",
@@ -22,24 +27,35 @@ department_names <- c("Aerospace Engineering",
                       "English",
                       "Environmental Systems",
                       "Ethnic Studies",
+                      'Extension',
+                      "First Year Experience",
                       "Geosciences",
                       "German Studies",
                       "Global Health",
-                      "Global South Studies",
+                      "Global Policy and Strategy",
+                      "GPS",
                       "Public Health",
                       "History",
                       'Human Development Sciences',
+                      "HUM",
                       "International Studies",
                       "Italian Studies",
                       "Japanese Studies",
                       "Jewish Studies",
                       "Latin American Studies",
+                      "Library staff",
                       "Linguistics",
                       "Literature",
                       "Mathematics",
+                      "MCWP",
+                      "MMW",
+                      "Medicine",
                       "Mechanical Engineering",
                       "Music",
                       "Nanoengineering",
+                      "Nursing",
+                      "Office for Equity, Diversity & Inclusion",
+                      "Pharmacy",
                       "Philosiphy",
                       "Physics",
                       "Political Science",
@@ -48,11 +64,20 @@ department_names <- c("Aerospace Engineering",
                       "Religion",
                       "Russian and Soviet Studies",
                       "Scripps Institute of Oceanography",
+                      "School of Medicine",
+                      "SIO",
                       "Sociology",
                       "Structural Engineering",
+                      "Teaching and Learning Commons",
                       "Theatre and Dance",
+                      "UCSD Health",
                       "Urban Studies and Planning",
-                      "Visual Arts"
+                      "Visual Arts",
+                      
+                      #other
+                      
+                      "Off Campus",
+                      "non-UCSD"
                       )
 
 
@@ -62,7 +87,7 @@ fuzzy_match <- function(typo_list){
   indices <- amatch(x = typo_list, #things we want matched / regularized
                     table = department_names, #table of correct namse
                     method = "jw", #jaro winkler mathodology
-                    maxDist = 5)
+                    maxDist = 0.25)
   
   ## assign to new obj
   matched_departments <- department_names[indices]

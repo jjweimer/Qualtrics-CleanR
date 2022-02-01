@@ -89,13 +89,17 @@ shinyUI(fixedPage(theme = shinytheme("cosmo"),
                              tags$hr(),
                              plotlyOutput("consults_per_week"),
                              tags$hr(),
+                             plotlyOutput("consults_graph"),
                              numericInput("n","Minimum Count of Department:"
                                           ,100,min = 1),
-                             plotlyOutput("consults_graph"),
                              tags$hr(),
                              #this plot is shy ??
                              #plotlyOutput("consult_locations"),
                              #tags$hr(),
+                             plotlyOutput("consult_categories"),
+                             numericInput("n_category","Minimum Count of Category:"
+                                          ,100,min = 1),
+                             tags$hr(),
                              DT::dataTableOutput("consults_DT")
                              ),
                     tabPanel("Instruction",
