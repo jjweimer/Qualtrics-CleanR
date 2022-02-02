@@ -1,4 +1,6 @@
 ## General
+- RecordedDate: Date of qualtrics form entry
+- Q2: Entered By (Desk/Lab or Person Name) (RAD, Info Desk, Data & GIS Lab)
 - Q3: Which Service (consulatatoin, instructioun, outreach)
 
 ## Consults
@@ -27,3 +29,14 @@
 - Q21: number of instruction attendants
 - Q192.1: format
 
+## RAD/INFO Desk
+- Q26: Where was the question answered (in person / phone)
+- Q27: Question Type Info Desk (directional, printing, VPN, etc)
+- Q31: Question Type RAD (Topical/Course Assignment Research, Printing, Course Reserves, etc)
+
+## Data & GIS Lab
+- Q49: Entry Type
+- Q50: User Status (grad, undergrad, faculty)
+- Q51: Major/Department/Group
+- Q52: Purpose of Visit (GIS,Data,Study, other)
+- Q53: Type of Question
