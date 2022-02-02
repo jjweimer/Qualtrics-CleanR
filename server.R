@@ -629,6 +629,8 @@ shinyServer(function(input, output) {
       #aggregate daily
       daily_data <- consults %>% group_by(month_day, year) %>%
         count(month_day)
+      #make sure each date occurs at lesat once so axes work well
+      daily_data <- all_daily_dates(daily_data)
       
       #plot
       fig2 <- ggplotly(
@@ -859,6 +861,9 @@ shinyServer(function(input, output) {
       daily_data <- instruction %>% group_by(month_day, year) %>%
         count(month_day)
       
+      #make sure each date occurs at lesat once so axes work well
+      daily_data <- all_daily_dates(daily_data)
+      
       #plot
       fig2 <- ggplotly(
         daily_data %>% 
@@ -924,6 +929,9 @@ shinyServer(function(input, output) {
       #aggregate daily
       daily_data <- info %>% group_by(month_day, year) %>%
         count(month_day)
+      
+      #make sure each date occurs at least once so axes work well
+      daily_data <- all_daily_dates(daily_data)
       
       #plot
       #plot

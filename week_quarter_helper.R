@@ -17,6 +17,16 @@ month_label <- format(month, format = "%b")
 month_2 <- c("01-01", "02-01", "03-01", "04-01", "05-01", "06-01",
              "07-01", "08-01", "09-01", "10-01", "11-01", "12-01")
 
+
+
+month_days_list <-  seq(as.Date("2020-01-01"), 
+                        as.Date("2020-12-31"), 
+                        by = "1 day")
+
+month_days_list <- format(month_days_list, format = "%m-%d")
+month_days_list <- data.frame(month_day = month_days_list,
+                              year = '2020')
+
 ####################################################################
 ########## HELPER FUNCTIONS ########################################
 ###################################################################
@@ -168,5 +178,16 @@ clean_years <- function(df){
 }
 
 
-
+## get a daily observation for each day of daily data
+all_daily_dates <- function(daily_data){
+  
+  #full join so each month-date occurs at least once
+  test <- full_join(month_days_list, daily_data, by = c("month_day","year"))
+  
+  #set NA counts to 0
+  test$n[is.na(test$n)] <- 0
+  
+  return(test)
+  
+}
 
