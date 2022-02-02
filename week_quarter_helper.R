@@ -1,4 +1,24 @@
 ####################################################################
+#############  HELPER OBJECTS  #####################################
+####################################################################
+
+#create month labels for weekly aggregation
+month <- seq(as.Date("2020-01-01"), 
+             as.Date("2020-12-01"), 
+             by = "1 month")
+#splits of when each week count corresponds to change in month
+month_numeric <- as.numeric(format(month, format = "%U"))
+month_numeric <- month_numeric + 1
+#string labels
+month_label <- format(month, format = "%b")
+
+#for daily data aggregation
+#month scale
+month_2 <- c("01-01", "02-01", "03-01", "04-01", "05-01", "06-01",
+             "07-01", "08-01", "09-01", "10-01", "11-01", "12-01")
+
+
+####################################################################
 ########## HELPER FUNCTIONS ########################################
 ###################################################################
 
@@ -147,3 +167,7 @@ clean_years <- function(df){
   
   return(df)
 }
+
+
+
+

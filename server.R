@@ -232,9 +232,11 @@ shinyServer(function(input, output) {
     colnames(info) <- c("year","week","date_time","desk","service")
     
     #week of quarter and quarter
-    
     info <- week_to_quarter(info)
     info <- week_of_quarter(info)
+    
+    #month_day
+    info <- month_day(info)
     
     #filter to selected quarter
     if(input$quarter != "All"){
@@ -284,6 +286,9 @@ shinyServer(function(input, output) {
     gis_lab <- week_to_quarter(gis_lab)
     gis_lab <- week_of_quarter(gis_lab)
     
+    #month_day
+    gis_lab <- month_day(gis_lab)
+    
     #filter to selected quarter
     if(input$quarter != "All"){
       gis_lab <- gis_lab %>% filter(quarter == input$quarter)
@@ -328,6 +333,21 @@ shinyServer(function(input, output) {
   #return n_category
   return_n_category <- reactive({
     return(input$n_category)
+  })
+  
+  #return consults time scale
+  return_consults_scale <- reactive({
+    return(input$consults_scale)
+  })
+  
+  #return instruction scale
+  return_instruction_scale <- reactive({
+    return(input$instruction_scale)
+  })
+  
+  #return info time scale
+  return_info_scale <- reactive({
+    return(input$info_scale)
   })
   
   
@@ -563,8 +583,8 @@ shinyServer(function(input, output) {
     return(fig)
   })
   
-  #num consults per week over time
-  output$consults_per_week <- renderPlotly({
+  #num consults over time
+  output$consults_over_time <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
     if(is.null(input$file1)){
@@ -574,38 +594,59 @@ shinyServer(function(input, output) {
     #read in the user data
     consults <- Sortie_consults() #return Sortie function
     
-    weekly_data <- consults %>% group_by(week,year) %>%
-      count(week)
+    #get user time scale
+    user_consults_scale <- return_consults_scale()
     
-    
-    #create month labels
-    
-    month <- seq(as.Date("2020-01-01"), 
-                 as.Date("2020-12-01"), 
-                 by = "1 month")
-    #splits of when each week count corresponds to change in month
-    month_numeric <- as.numeric(format(month, format = "%U"))
-    month_numeric <- month_numeric + 1
-    #string labels
-    month_label <- format(month, format = "%b")
-    
-    #plot
-    fig1 <- ggplotly(
-      weekly_data %>% 
-        ggplot(aes(x = week, y = n, fill = year)) +
-        geom_bar(stat='identity') +
-        ggtitle("Weekly Consults") +
-        labs(x = NULL, y = "Number of Consults") +
-        theme_bw() +
-        scale_x_continuous(breaks = month_numeric, 
+    if(user_consults_scale == "Weekly"){
+      
+      #aggregate weekly 
+      weekly_data <- consults %>% group_by(week,year) %>%
+        count(week)
+      
+      
+      
+      #plot
+      fig1 <- ggplotly(
+        weekly_data %>% 
+          ggplot(aes(x = week, y = n, fill = year)) +
+          geom_bar(stat='identity') +
+          ggtitle("Weekly Consults") +
+          labs(x = NULL, y = "Number of Consults") +
+          theme_bw() +
+          scale_x_continuous(breaks = month_numeric, 
+                             labels = month_label)
+      ) %>%
+        config(displaylogo = FALSE) %>%
+        config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
+                                          "lasso2d",
+                                          "pan2d","autoscale2d","select2d"))
+      
+      return(fig1)
+      
+    }else if(user_consults_scale == "Daily"){
+      
+      #aggregate daily
+      daily_data <- consults %>% group_by(month_day, year) %>%
+        count(month_day)
+      
+      #plot
+      fig2 <- ggplotly(
+        daily_data %>% 
+          ggplot(aes(x = month_day, y = n, fill = year)) +
+          geom_bar(stat= 'identity') +
+          theme_bw() +
+          labs(x = NULL, y = "Number of Consults") +
+          ggtitle("Daily Consults") +
+          scale_x_discrete(breaks = month_2, 
                            labels = month_label)
-    ) %>%
-      config(displaylogo = FALSE) %>%
-      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
-                                        "lasso2d",
-                                        "pan2d","autoscale2d","select2d"))
-
-    return(fig1)
+      ) %>%
+        config(displaylogo = FALSE) %>%
+        config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
+                                          "lasso2d",
+                                          "pan2d","autoscale2d","select2d"))
+      
+      return(fig2)
+    }
     
   })
   
@@ -784,41 +825,59 @@ shinyServer(function(input, output) {
     weekly_data <- instruction %>% group_by(week,year) %>%
       count(week)
     
-    #make daily events count
-    #instruction <- instruction %>% group_by(date) %>%
-    #  mutate(daily_instruction_events = n())
+    user_instruction_scale <- return_instruction_scale()
     
-    #make daily people count
-    #instruction <- instruction %>% group_by(date) %>%
-    #  mutate(daily_people_instructed = sum(num_attendants)) 
-    
-    #create month labels
-    month <- seq(as.Date("2020-01-01"), 
-                 as.Date("2020-12-01"), 
-                 by = "1 month")
-    #splits of when each week count corresponds to change in month
-    month_numeric <- as.numeric(format(month, format = "%U"))
-    month_numeric <- month_numeric + 1
-    #string labels
-    month_label <- format(month, format = "%b")
-   
-    #plot
-    fig1 <- ggplotly(
-      weekly_data %>% 
-        ggplot(aes(x = week, y = n, fill = year)) +
-        geom_bar(stat='identity') +
-        ggtitle("Weekly Instruction Events") +
-        labs(x = NULL, y = "Number of Instruction Events") +
-        theme_bw() +
-        scale_x_continuous(breaks = month_numeric, 
+    if(user_instruction_scale == "Weekly"){
+      
+      #agregate weekly
+      weekly_data <- instruction %>% group_by(week,year) %>%
+        count(week)
+      
+      #plot
+      fig1 <- ggplotly(
+        weekly_data %>% 
+          ggplot(aes(x = week, y = n, fill = year)) +
+          geom_bar(stat='identity') +
+          ggtitle("Weekly Instruction Events") +
+          labs(x = NULL, y = "Number of Instruction Events") +
+          theme_bw() +
+          scale_x_continuous(breaks = month_numeric, 
+                             labels = month_label)
+      ) %>%
+        config(displaylogo = FALSE) %>%
+        config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
+                                          "zoom2d","lasso2d",
+                                          "pan2d","autoscale2d",
+                                          "select2d"))
+      
+      return(fig1)
+      
+    } else if(user_instruction_scale == "Daily"){
+      
+      #aggregate daily
+      daily_data <- instruction %>% group_by(month_day, year) %>%
+        count(month_day)
+      
+      #plot
+      fig2 <- ggplotly(
+        daily_data %>% 
+          ggplot(aes(x = month_day, y = n, fill = year)) +
+          geom_bar(stat= 'identity') +
+          theme_bw() +
+          ggtitle("Daily Instruction Events")+
+          labs(x = NULL, y = "Number of Instruction Events") +
+          scale_x_discrete(breaks = month_2, 
                            labels = month_label)
-    ) %>%
-      config(displaylogo = FALSE) %>%
-      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
-                                        "zoom2d","lasso2d",
-                                        "pan2d","autoscale2d","select2d"))
+      )%>%
+        config(displaylogo = FALSE) %>%
+        config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
+                                          "zoom2d","lasso2d",
+                                          "pan2d","autoscale2d",
+                                          "select2d"))
+      
+      return(fig2)
+    }
     
-    return(fig1)
   })
   
   #info/RAD services over time
@@ -832,37 +891,57 @@ shinyServer(function(input, output) {
     #read in df
     info <- Sortie_info_RAD()
     
-    weekly_data <- info %>% group_by(week,year) %>%
-      count(week)
+    #check user time scale
+    user_info_scale <- return_info_scale()
     
-    #create month labels
-    month <- seq(as.Date("2020-01-01"), 
-                 as.Date("2020-12-01"), 
-                 by = "1 month")
-    #splits of when each week count corresponds to change in month
-    month_numeric <- as.numeric(format(month, format = "%U"))
-    month_numeric <- month_numeric + 1
-    #string labels
-    month_label <- format(month, format = "%b")
-    
-    #plot
-    fig1 <- ggplotly(
-      weekly_data %>% 
-        ggplot(aes(x = week, y = n, fill = year)) +
-        geom_bar(stat='identity') +
-        ggtitle("Weekly Research Assistance / Info Desk Services") +
-        labs(x = NULL, y = "Number of Services") +
-        theme_bw() +
-        scale_x_continuous(breaks = month_numeric, 
+    if(user_info_scale == "Weekly"){
+      
+      #aggregate weekly
+      weekly_data <- info %>% group_by(week,year) %>%
+        count(week)
+      
+      #plot
+      fig1 <- ggplotly(
+        weekly_data %>% 
+          ggplot(aes(x = week, y = n, fill = year)) +
+          geom_bar(stat='identity') +
+          ggtitle("Weekly Research Assistance / Info Desk Services") +
+          labs(x = NULL, y = "Number of Services") +
+          theme_bw() +
+          scale_x_continuous(breaks = month_numeric, 
+                             labels = month_label)
+      ) %>%
+        config(displaylogo = FALSE) %>%
+        config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
+                                          "zoom2d","lasso2d",
+                                          "pan2d","autoscale2d","select2d"))
+      
+      return(fig1)
+      
+    } else if (user_info_scale == "Daily"){
+      
+      #aggregate daily
+      daily_data <- info %>% group_by(month_day, year) %>%
+        count(month_day)
+      
+      #plot
+      #plot
+      fig2 <- ggplotly(
+        daily_data %>% 
+          ggplot(aes(x = month_day, y = n, fill = year)) +
+          geom_bar(stat= 'identity') +
+          theme_bw() +
+          labs(x = NULL, y = "Number of Services") +
+          ggtitle("Daily RAD/info Desk Services") +
+          scale_x_discrete(breaks = month_2, 
                            labels = month_label)
-    ) %>%
-      config(displaylogo = FALSE) %>%
-      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
-                                        "zoom2d","lasso2d",
-                                        "pan2d","autoscale2d","select2d"))
-    
-    return(fig1)
-    
+      ) %>%
+        config(displaylogo = FALSE) %>%
+        config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
+                                          "lasso2d",
+                                          "pan2d","autoscale2d","select2d"))
+      return(fig2)
+    }
   })
   
   #week of quarter data and GIS lab use

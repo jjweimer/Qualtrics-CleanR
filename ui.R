@@ -87,7 +87,11 @@ shinyUI(fixedPage(theme = shinytheme("cosmo"),
                              tags$hr(),
                              plotlyOutput("intra_quarter_consults"),
                              tags$hr(),
-                             plotlyOutput("consults_per_week"),
+                             plotlyOutput("consults_over_time"),
+                             selectInput("consults_scale", "Choose an Aggregation Scale:", #this is our selector
+                                         c("Weekly" = "Weekly",
+                                           "Daily" = "Daily")
+                             ),
                              tags$hr(),
                              plotlyOutput("consults_graph"),
                              numericInput("n","Minimum Count of Department:"
@@ -110,6 +114,10 @@ shinyUI(fixedPage(theme = shinytheme("cosmo"),
                              plotlyOutput("intra_quarter_instruction"),
                              tags$hr(),
                              plotlyOutput("instruction_time_plot"),
+                             selectInput("instruction_scale", "Choose an Aggregation Scale:", #this is our selector
+                                         c("Weekly" = "Weekly",
+                                           "Daily" = "Daily")
+                             ),
                              tags$hr(),
                              DT::dataTableOutput("instruction_DT")
                              ),
@@ -124,9 +132,14 @@ shinyUI(fixedPage(theme = shinytheme("cosmo"),
                              #tags$hr(),
                              h3("RAD / Info Desk Statistics"),
                              textOutput("info_stats"),
-                             DT::dataTableOutput("serv_counts_DT"),
                              tags$hr(),
                              plotlyOutput("info_time_plot"),
+                             selectInput("info_scale", "Choose an Aggregation Scale:", #this is our selector
+                                         c("Weekly" = "Weekly",
+                                           "Daily" = "Daily")
+                             ),
+                             tags$hr(),
+                             DT::dataTableOutput("serv_counts_DT"),
                              tags$hr(),
                              DT::dataTableOutput("info_DT")
                              ),

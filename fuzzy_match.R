@@ -138,7 +138,7 @@ department_names <- c(
                       "WCWP",
                       
                       #other
-                      
+                      "MPP", #master public policy
                       "Off Campus",
                       "non-UCSD",
                       "SDSC",
