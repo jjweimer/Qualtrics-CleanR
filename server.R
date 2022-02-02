@@ -52,7 +52,7 @@ shinyServer(function(input, output) {
     #clean years
     instruction <- clean_years(instruction)
     
-    #week of quarter
+    #week to quarter
     instruction <- week_to_quarter(instruction)
     
     #week of quarter
@@ -161,6 +161,11 @@ shinyServer(function(input, output) {
     consults$num_consult <- as.numeric(consults$num_consult)
     #some NAs, lets make these 1 by default
     consults$num_consult[is.na(consults$num_consult)] <- 1
+    
+    #make time spent numeric
+    consults$time_spent[consults$time_spent == "greater than 10"] <- '10'
+    consults$time_spent <- as.numeric(consults$time_spent)
+    consults$time_spent[is.na(consults$time_spent)] <- 0
     
     #add week of year,quarters(works for 2021 and 2020, need to check for other)
     consults$week <- isoweek(consults$date)
@@ -350,7 +355,6 @@ shinyServer(function(input, output) {
     return(input$info_scale)
   })
   
-  
   ###################################################################
   ### Render Tables  ############
   ###################################################################
@@ -465,10 +469,8 @@ shinyServer(function(input, output) {
     #read in the user data
     consults <- Sortie_consults() #return Sortie function
     
-    #now the text render part
-    #how many consults in what date range?
-    #date_min <- as.character(min(consults$date[!is.na(consults$date)]))
-    #date_max <- as.character(max(consults$date[!is.na(consults$date)]))
+    num_hours <- round(sum(consults$time_spent[
+                            !is.na(consults$time_spent)]), -1)#round to nearest 10
     num_consults <- nrow(consults)
     num_people_consulted <- sum(consults$num_consult[
                                 !is.na(consults$num_consult)])
@@ -476,8 +478,8 @@ shinyServer(function(input, output) {
     
     return(paste("There were",num_consults, "consults reaching",
                    num_people_consulted, "people in", 
-                   num_departments, "unique departments"))
-    
+                   num_departments, "unique departments. There 
+                 were approximately", num_hours, "hours spent on consultations."))
   })
   
   output$info_stats <- renderText({
@@ -534,7 +536,6 @@ shinyServer(function(input, output) {
                  num_data,"people visit for data services/software."))
     
   })
-  
   
   #############################################
   ### PLOTS
@@ -753,7 +754,7 @@ shinyServer(function(input, output) {
     
     # plot as col plot
     fig <- ggplotly(
-      categories[categories$n > 100,] %>%
+      categories %>%
       ggplot(aes(x = reorder(category,n), y = n, fill = n)) +
       geom_col() +
       coord_flip() +

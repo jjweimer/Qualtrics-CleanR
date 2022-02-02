@@ -8,7 +8,7 @@ month <- seq(as.Date("2020-01-01"),
              by = "1 month")
 #splits of when each week count corresponds to change in month
 month_numeric <- as.numeric(format(month, format = "%U"))
-month_numeric <- month_numeric + 1
+month_numeric <- month_numeric + 1 #add one so weeks start at 1 not 0
 #string labels
 month_label <- format(month, format = "%b")
 
@@ -16,7 +16,6 @@ month_label <- format(month, format = "%b")
 #month scale
 month_2 <- c("01-01", "02-01", "03-01", "04-01", "05-01", "06-01",
              "07-01", "08-01", "09-01", "10-01", "11-01", "12-01")
-
 
 ####################################################################
 ########## HELPER FUNCTIONS ########################################

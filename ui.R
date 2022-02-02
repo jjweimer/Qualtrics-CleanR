@@ -56,8 +56,7 @@ shinyUI(fixedPage(theme = shinytheme("cosmo"),
         helpText("To download clean Data & GIS Lab Data"),
         tags$hr(),
         helpText("This is an applet to clean user uploaded service stats Qualtrics
-                  data.
-                  Upload a Qualtrics .csv file using the button above. 
+                  data. Upload a Qualtrics .csv file using the button above. 
                   Summary statistics, plots and tables will be generated for
                   you automatically."),
         helpText("To subset your data by Quarter or Year 
