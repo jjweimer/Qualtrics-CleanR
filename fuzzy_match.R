@@ -2,15 +2,16 @@ library(stringdist)
 library(dplyr)
 
 #define department names to match to
-department_names <- c(
-                        #department names
+department_names <- c( #UCSD departments
                       "Aerospace Engineering",
                       "Academic Internship Program",
                       "Alumni",
                       "Anthropology",
                       "Archaeology",
+                      "Art History",
                       "Bioengineering",
                       "Biological Sciences",
+                      "Biology",
                       "Biochemistry",
                       "CAT (Sixth College)",
                       "Chemistry",
@@ -26,11 +27,13 @@ department_names <- c(
                       "Education Studies",
                       "Electrical & Computer Engineering",
                       "English",
+                      "Engineering",
                       "Environmental Systems",
                       "Ethnic Studies",
                       'Extension',
                       "First Year Experience",
                       "Geosciences",
+                      "General",
                       "German Studies",
                       "Global Health",
                       "Global Policy and Strategy",
@@ -53,16 +56,18 @@ department_names <- c(
                       "Nursing",
                       "Office for Equity, Diversity & Inclusion",
                       "Pharmacy",
-                      "Philosiphy",
+                      "Philosophy",
                       "Physics",
                       "Political Science",
                       "Psychology",
+                      "Pyschiatry",
                       "Rady School of Management",
                       "Religion",
                       "Russian and Soviet Studies",
                       "Scripps Institute of Oceanography",
                       "School of Medicine",
                       "Sociology",
+                      "Spanish",
                       "Structural Engineering",
                       "Teaching and Learning Commons",
                       "Theatre and Dance",
@@ -71,7 +76,6 @@ department_names <- c(
                       "Visual Arts",
                       
                       #dept codes
-                      
                       "ANTH",
                       "BENG",
                       "BIOL",
@@ -116,6 +120,7 @@ department_names <- c(
                       "MUS",
                       "MGMT",
                       "NENG",
+                      "NANO",
                       "POLI",
                       "PHIL",
                       "PHYS",
@@ -129,6 +134,7 @@ department_names <- c(
                       "SOE",
                       "STPA",
                       "SXTH",
+                      "SUNY",
                       "THEA",
                       "TMC",
                       "TWS",
@@ -137,14 +143,62 @@ department_names <- c(
                       "WARR",
                       "WCWP",
                       
-                      #other
+                      #UCSD colleges
+                      "Muir",
+                      "Marshall",
+                      "Warren",
+                      "Revelle",
+                      "ERC", "Roosevelt", 
+                      "Sixth",
+                      "Seventh",
+                      
+                      #institutions
+                      "SDSU",
+                      "SJSU",
+                      "USD",
+                      "UCSD Extension",
+                      "UCLA",
+                      
+                      #Health
+                      "Family Medicine",
+                      "Gastroenterology",
+                      "Health Strategy",
+                      "Neurology",
+                      "Neurosciences",
+                      "Pathology",
+                      "Radiology",
+                      "Shiley Eye Institute",
+                      "VA Nurse",
+                      "Infectious disease",
+                      
+                      #other (these are not ordered)
                       "MPP", #master public policy
                       "Off Campus",
                       "non-UCSD",
                       "SDSC",
                       "SDCWA", #San Diego County Water Authority
-                      "SDSU",
-                      "USD"
+                      "Other",
+                      "NOAA - Southwest Fisheries Science Center",
+                      "NOAA - SWFSC", #same as previous obs
+                      "Center for Gender Equity & Health",
+                      "Triton Tree Trust",
+                      "Campus Planning",
+                      "HDSI",
+                      "HDS", #Human Development Sciences 
+                      "ACTRI",
+                      "Calit2",
+                      "JSOE",
+                      "Career Center",
+                      "HILA",
+                      "SSPPS",
+                      "Public",
+                      "Statistics",
+                      "GLBH",
+                      "ANP",
+                      "Korea",
+                      "LAS",
+                      "Community Member",
+                      "Center for U.S.-Mexican Studies"
                       )
 
 #function to be called in server.R
@@ -154,11 +208,12 @@ fuzzy_match <- function(typo_list){
   indices <- amatch(x = typo_list, #things we want matched / regularized
                     table = department_names, #table of correct names
                     method = "jw", #jaro winkler methodology
-                    maxDist = 0.25 #unsure ideal dist, 0.5 seemed worse
+                    maxDist = 0.25 #unsure ideal dist.
+                    #strict seems better since our dict is sobig and based on 
+                    #which departments already exist in the data
                     )
   
   ## assign to new obj
   matched_departments <- department_names[indices]
-  
   return(matched_departments)
 }
