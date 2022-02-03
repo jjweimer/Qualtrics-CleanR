@@ -325,41 +325,6 @@ shinyServer(function(input, output) {
     }
   })
   
-  #get quarter input
-  get_quarter <- reactive({
-    return(input$quarter)
-  })
-  
-  #return n
-  return_n <- reactive({
-    return(input$n)
-  })
-  
-  #return n_category
-  return_n_category <- reactive({
-    return(input$n_category)
-  })
-  
-  #return consults time scale
-  return_consults_scale <- reactive({
-    return(input$consults_scale)
-  })
-  
-  #return instruction scale
-  return_instruction_scale <- reactive({
-    return(input$instruction_scale)
-  })
-  
-  #return info time scale
-  return_info_scale <- reactive({
-    return(input$info_scale)
-  })
-  
-  #retuen is_fuzzy
-  return_is_fuzzy <- reactive({
-    return(input$is_fuzzy)
-  })
-  
   ###################################################################
   ### Render Tables  ############
   ###################################################################
@@ -557,7 +522,7 @@ shinyServer(function(input, output) {
     #read in the user data
     consults <- Sortie_consults() #return Sortie function
     
-    user_choice <- return_is_fuzzy()
+    user_choice <- input$is_fuzzy
     
     if(user_choice == "Matched"){
       #drop NA departments
@@ -568,7 +533,7 @@ shinyServer(function(input, output) {
         count(fuzzy_department) %>% arrange(-n)
       
       #let user select minimum n of dept
-      n_department <- return_n()
+      n_department <- input$n
       #filter for n 
       dept_counts <- dept_counts[dept_counts$n >= n_department,]
       
@@ -601,7 +566,7 @@ shinyServer(function(input, output) {
         count(fuzzy_department) %>% arrange(-n)
       
       #let user select minimum n of dept
-      n_department <- return_n()
+      n_department <- input$n
       #filter for n 
       dept_counts <- dept_counts[dept_counts$n >= n_department,]
       
@@ -639,15 +604,13 @@ shinyServer(function(input, output) {
     consults <- Sortie_consults() #return Sortie function
     
     #get user time scale
-    user_consults_scale <- return_consults_scale()
+    user_consults_scale <- input$consults_scale
     
     if(user_consults_scale == "Weekly"){
       
       #aggregate weekly 
       weekly_data <- consults %>% group_by(week,year) %>%
         count(week)
-      
-      
       
       #plot
       fig1 <- ggplotly(
@@ -712,7 +675,7 @@ shinyServer(function(input, output) {
       count(week_of_quarter)
     
     #get the selected quarter
-    q <- get_quarter()
+    q <- input$quarter
     
     title <- paste("Consults per week of the Quarter (",
                    q," Quarter)", sep = '')
@@ -791,10 +754,8 @@ shinyServer(function(input, output) {
     categories <- consults %>% group_by(category) %>% 
       count(category) %>% arrange(-n)
     
-    
-    
     #let user select minimum n of dept
-    n_category <- return_n_category()
+    n_category <- input$n_category
     categories <- categories[categories$n >= n_category,]
     
     # plot as col plot
@@ -833,7 +794,7 @@ shinyServer(function(input, output) {
       count(week_of_quarter)
     
     #get the selected quarter
-    q <- get_quarter()
+    q <- input$quarter
     
     title <- paste("Instruction Events per week of the Quarter (",
                    q," Quarter)", sep = '')
@@ -871,7 +832,7 @@ shinyServer(function(input, output) {
     weekly_data <- instruction %>% group_by(week,year) %>%
       count(week)
     
-    user_instruction_scale <- return_instruction_scale()
+    user_instruction_scale <- input$instruction_scale
     
     if(user_instruction_scale == "Weekly"){
       
@@ -941,7 +902,7 @@ shinyServer(function(input, output) {
     info <- Sortie_info_RAD()
     
     #check user time scale
-    user_info_scale <- return_info_scale()
+    user_info_scale <-input$info_scale
     
     if(user_info_scale == "Weekly"){
       
@@ -1012,7 +973,7 @@ shinyServer(function(input, output) {
       count(week_of_quarter)
     
     #get the selected quarter
-    q <- get_quarter()
+    q <- input$quarter
     
     title <- paste("Data & GIS Lab visits per week of the Quarter (",
                    q," Quarter)", sep = '')
