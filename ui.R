@@ -95,6 +95,10 @@ shinyUI(fixedPage(theme = shinytheme("cosmo"),
                              plotlyOutput("consults_graph"),
                              numericInput("n","Minimum Count of Department:"
                                           ,100,min = 1),
+                             selectInput("is_fuzzy", "Select Matched or Raw Departments:", #this is our selector
+                                         c("Matched" = "Matched",
+                                           "Raw" = "Raw")
+                             ),
                              tags$hr(),
                              #this plot is shy ??
                              #plotlyOutput("consult_locations"),

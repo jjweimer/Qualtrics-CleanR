@@ -355,6 +355,11 @@ shinyServer(function(input, output) {
     return(input$info_scale)
   })
   
+  #retuen is_fuzzy
+  return_is_fuzzy <- reactive({
+    return(input$is_fuzzy)
+  })
+  
   ###################################################################
   ### Render Tables  ############
   ###################################################################
@@ -541,7 +546,7 @@ shinyServer(function(input, output) {
   ### PLOTS
   ################################################
   
-  #consults fuzzy department counts
+  #consults department counts
   output$consults_graph <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
@@ -552,36 +557,74 @@ shinyServer(function(input, output) {
     #read in the user data
     consults <- Sortie_consults() #return Sortie function
     
-    #drop NA departments
-    consults <- consults[!is.na(consults$fuzzy_department),]
-  
-    ##get dept counts
-    dept_counts <- consults %>% group_by(fuzzy_department) %>%
-      count(fuzzy_department) %>% arrange(-n)
-   
-    #let user select minimum n of dept
-    n_department <- return_n()
-    #filter for n 
-    dept_counts <- dept_counts[dept_counts$n >= n_department,]
+    user_choice <- return_is_fuzzy()
     
-    #make the title  reactive to n
-    title <- paste("Most Consulted Departments (n >= ", 
-                   n_department,")" , sep = '')
-    
-    fig <- ggplotly(
-      dept_counts %>%
-      ggplot(aes(x = reorder(fuzzy_department,n), y = n, fill = n)) +
-      geom_col(alpha = 1) +
-      #geom_text(aes(label = n), hjust = -1) +
-      coord_flip() +
-      ggtitle(title) +
-      theme_bw() +
-      labs(x = NULL, y = "count") +
-      theme(legend.position="none")
+    if(user_choice == "Matched"){
+      #drop NA departments
+      consults <- consults[!is.na(consults$fuzzy_department),]
+      
+      ##get dept counts
+      dept_counts <- consults %>% group_by(fuzzy_department) %>%
+        count(fuzzy_department) %>% arrange(-n)
+      
+      #let user select minimum n of dept
+      n_department <- return_n()
+      #filter for n 
+      dept_counts <- dept_counts[dept_counts$n >= n_department,]
+      
+      #make the title  reactive to n
+      title <- paste("Most Consulted Departments (n >= ", 
+                     n_department,")" , sep = '')
+      
+      fig <- ggplotly(
+        dept_counts %>%
+          ggplot(aes(x = reorder(fuzzy_department,n), y = n, fill = n)) +
+          geom_col(alpha = 1) +
+          #geom_text(aes(label = n), hjust = -1) +
+          coord_flip() +
+          ggtitle(title) +
+          theme_bw() +
+          labs(x = NULL, y = "count") +
+          theme(legend.position="none")
       ) %>% #layout(height = 600) %>%
         config(displayModeBar = F)
       
-    return(fig)
+      return(fig)
+      
+    } else if (user_choice == "Raw") {
+      
+      #drop NA departments
+      consults <- consults[!is.na(consults$department),]
+      
+      ##get dept counts
+      dept_counts <- consults %>% group_by(department) %>%
+        count(fuzzy_department) %>% arrange(-n)
+      
+      #let user select minimum n of dept
+      n_department <- return_n()
+      #filter for n 
+      dept_counts <- dept_counts[dept_counts$n >= n_department,]
+      
+      #make the title  reactive to n
+      title <- paste("Most Consulted Departments (n >= ", 
+                     n_department,")" , sep = '')
+      
+      fig1 <- ggplotly(
+        dept_counts %>%
+          ggplot(aes(x = reorder(department,n), y = n, fill = n)) +
+          geom_col(alpha = 1) +
+          #geom_text(aes(label = n), hjust = -1) +
+          coord_flip() +
+          ggtitle(title) +
+          theme_bw() +
+          labs(x = NULL, y = "count") +
+          theme(legend.position="none")
+      ) %>% #layout(height = 600) %>%
+        config(displayModeBar = F)
+      
+      return(fig1)
+    }
+   
   })
   
   #num consults over time
