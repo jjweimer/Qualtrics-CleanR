@@ -3,6 +3,10 @@ library(stringdist)
 #function to be called in server.R
 fuzzy_match <- function(typo_list){
   
+  #takes in column vector of departmet names
+  #outputs column vector of matched names
+  #crosswalks dept codes to dept names
+  
   #define names to match to
   department_names <- c( 
     #UCSD departments
@@ -212,8 +216,7 @@ fuzzy_match <- function(typo_list){
                     table = department_names, #table of correct names
                     method = "jw", #jaro winkler methodology
                     maxDist = 0.25 #unsure ideal dist.
-                    #strict seems better since our dict is sobig and based on 
-                    #which departments already exist in the data
+                    #strict seems better since our dict is so big 
                     )
   
   ## assign to new obj
@@ -222,15 +225,15 @@ fuzzy_match <- function(typo_list){
   #crosswalk dept codes to dept names
   counter <- 1
   codes <- c("ANTH","BENG","BIOL",
-             "CHEM","COGS","COMM",
-             "DOC","ECE","ECON",
+             "CHEM","COGS","COMM","CSE","CENG",
+             "DOC","DSC","ECE","ECON",
              "GPS","HDS","HDSI",
              "HIST","MATH","Music Department",
              "MAE","NANO","NENG", #NANO and NENG are both nanoengineering
              "SIO","USP")
   names <- c("Anthropology","Bioengineering","Biology",
-            "Chemistry","Cognitive Science","Communication",
-            "DOC Writing Program","Electrical & Computer Engineering","Economics",
+            "Chemistry","Cognitive Science","Communication", "Computer Science", "Chemical Engineering",
+            "DOC Writing Program","Data Science","Electrical & Computer Engineering","Economics",
             "Global Policy and Strategy","Human Development Sciences","Data Science",
             "History","Mathematics","Music",
             "Mechanical & Aerospace Engineering","Nanoengineering","Nanoengineering", #NANO and NENG are both nanoengineering

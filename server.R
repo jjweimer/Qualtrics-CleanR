@@ -188,6 +188,7 @@ shinyServer(function(input, output) {
     
     ## fuzzy match department names
     consults$fuzzy_department <- fuzzy_match(consults$department)
+    consults <- consults %>% relocate(fuzzy_department, .after = department)
     
     #filter to selected quarter
     if(input$quarter != "All"){
@@ -293,6 +294,10 @@ shinyServer(function(input, output) {
     
     #month_day
     gis_lab <- month_day(gis_lab)
+    
+    ## fuzzy match department names
+    gis_lab$fuzzy_department <- fuzzy_match(gis_lab$department)
+    gis_lab <- gis_lab %>% relocate(fuzzy_department, .after = department)
     
     #filter to selected quarter
     if(input$quarter != "All"){
@@ -547,12 +552,15 @@ shinyServer(function(input, output) {
           geom_col(alpha = 1) +
           #geom_text(aes(label = n), hjust = -1) +
           coord_flip() +
-          ggtitle(title) +
+          ggtitle("Most Consulted Departments") +
           theme_bw() +
           labs(x = NULL, y = "count") +
           theme(legend.position="none")
-      ) %>% #layout(height = 600) %>%
-        config(displayModeBar = F)
+      ) %>%
+        config(displaylogo = FALSE) %>%
+        config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
+                                          "lasso2d",
+                                          "pan2d","autoscale2d","select2d"))
       
       return(fig)
       
@@ -577,10 +585,10 @@ shinyServer(function(input, output) {
       fig1 <- ggplotly(
         dept_counts %>%
           ggplot(aes(x = reorder(department,n), y = n, fill = n)) +
-          geom_col(alpha = 1) +
+          geom_col(alpha = 1,) +
           #geom_text(aes(label = n), hjust = -1) +
           coord_flip() +
-          ggtitle(title) +
+          ggtitle("Most Consulted Departments") +
           theme_bw() +
           labs(x = NULL, y = "count") +
           theme(legend.position="none")
@@ -614,7 +622,7 @@ shinyServer(function(input, output) {
       
       #plot
       fig1 <- ggplotly(
-        weekly_data %>% 
+        weekly_data[!is.na(weekly_data$year),] %>% 
           ggplot(aes(x = week, y = n, fill = year)) +
           geom_bar(stat='identity') +
           ggtitle("Weekly Consults") +
@@ -640,7 +648,7 @@ shinyServer(function(input, output) {
       
       #plot
       fig2 <- ggplotly(
-        daily_data %>% 
+        daily_data[!is.na(daily_data$year),] %>% 
           ggplot(aes(x = month_day, y = n, fill = year)) +
           geom_bar(stat= 'identity') +
           theme_bw() +
@@ -681,9 +689,9 @@ shinyServer(function(input, output) {
                    q," Quarter)", sep = '')
     
     fig <- ggplotly(
-      weekly_data %>% 
+      weekly_data[!is.na(weekly_data$year),] %>% 
         ggplot(aes(x = week_of_quarter, y = n, fill = year)) +
-        geom_bar(stat = "identity") +
+        geom_bar(stat = "identity", position = input$consults_position) +
         ggtitle(title) +
         xlim(0,11) +
         labs(y = "Number of Consults", x = "Week") +
@@ -800,9 +808,9 @@ shinyServer(function(input, output) {
                    q," Quarter)", sep = '')
     
     fig <- ggplotly(
-      weekly_data %>% 
+      weekly_data[!is.na(weekly_data$year),] %>% 
         ggplot(aes(x = week_of_quarter, y = n, fill = year)) +
-        geom_bar(stat = "identity") +
+        geom_bar(stat = "identity", position = input$instruction_position) +
         ggtitle(title) +
         xlim(1,10) +
         labs(y = "Number of Instruction Events", x = "Week") +
@@ -888,6 +896,44 @@ shinyServer(function(input, output) {
       return(fig2)
     }
     
+  })
+  
+  #info / RAD week of quarter
+  output$intra_quarter_RAD <- renderPlotly({
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
+    #read in the user data
+    info <- Sortie_info_RAD() #return Sortie function
+    
+    weekly_data <- info %>% 
+      group_by(week_of_quarter, year) %>%
+      count(week_of_quarter)
+    
+    #get the selected quarter
+    q <- input$quarter
+    
+    title <- paste("Services per week of the Quarter (",
+                   q," Quarter)", sep = '')
+    
+    fig <- ggplotly(
+      weekly_data[!is.na(weekly_data$year),] %>% 
+        ggplot(aes(x = week_of_quarter, y = n, fill = year)) +
+        geom_bar(stat = "identity", position = input$info_position) +
+        ggtitle(title) +
+        xlim(0,11) +
+        labs(y = "Number of Services", x = "Week") +
+        theme_bw() +
+        scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8,9,10,11))
+    ) %>%
+      config(displaylogo = FALSE) %>%
+      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
+                                        "zoom2d","lasso2d",
+                                        "pan2d","autoscale2d","select2d"))
+    
+    return(fig)
   })
   
   #info/RAD services over time
@@ -981,7 +1027,7 @@ shinyServer(function(input, output) {
     fig <- ggplotly(
       weekly_data %>% 
         ggplot(aes(x = week_of_quarter, y = n, fill = year)) +
-        geom_bar(stat = "identity") +
+        geom_bar(stat = "identity",position = input$gis_position) +
         ggtitle(title) +
         xlim(0,11) +
         labs(y = "Number of Lab Visits", x = "Week") +
@@ -998,7 +1044,6 @@ shinyServer(function(input, output) {
   })
   
   #week of year data and gis lab use
-  #num consults per week over time
   output$gis_lab_per_week <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
@@ -1039,6 +1084,90 @@ shinyServer(function(input, output) {
                                         "pan2d","autoscale2d","select2d"))
     
     return(fig1)
+    
+  })
+  
+  #gis lab departments
+  output$gis_lab_departments <- renderPlotly({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
+    #read in the user data
+    gis_lab <- Sortie_data_gis() #return Sortie function
+    
+    user_choice <- input$is_fuzzy_gis
+    
+    if(user_choice == "Matched"){
+      #drop NA departments
+      gis_lab <- gis_lab[!is.na(gis_lab$fuzzy_department),]
+      
+      ##get dept counts
+      dept_counts <- gis_lab %>% group_by(fuzzy_department) %>%
+        count(fuzzy_department) %>% arrange(-n)
+      
+      #let user select minimum n of dept
+      n_department <- input$n_gis
+      #filter for n 
+      dept_counts <- dept_counts[dept_counts$n >= n_department,]
+      
+      #make the title  reactive to n
+      title <- paste("Most Consulted Departments (n >= ", 
+                     n_department,")" , sep = '')
+      
+      fig <- ggplotly(
+        dept_counts %>%
+          ggplot(aes(x = reorder(fuzzy_department,n), y = n, fill = n)) +
+          geom_col(alpha = 1) +
+          #geom_text(aes(label = n), hjust = -1) +
+          coord_flip() +
+          ggtitle("Most Frequent Departments") +
+          theme_bw() +
+          labs(x = NULL, y = "count") +
+          theme(legend.position="none")
+      ) %>%
+        config(displaylogo = FALSE) %>%
+        config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
+                                          "lasso2d",
+                                          "pan2d","autoscale2d","select2d"))
+      
+      return(fig)
+      
+    } else if (user_choice == "Raw") {
+      
+      #drop NA departments
+      gis_lab <- gis_lab[!is.na(gis_lab$department),]
+      
+      ##get dept counts
+      dept_counts <- gis_lab %>% group_by(department) %>%
+        count(fuzzy_department) %>% arrange(-n)
+      
+      #let user select minimum n of dept
+      n_department <- input$n_gis
+      #filter for n 
+      dept_counts <- dept_counts[dept_counts$n >= n_department,]
+      
+      #make the title  reactive to n
+      title <- paste("Most Consulted Departments (n >= ", 
+                     n_department,")" , sep = '')
+      
+      fig1 <- ggplotly(
+        dept_counts %>%
+          ggplot(aes(x = reorder(department,n), y = n, fill = n)) +
+          geom_col(alpha = 1,) +
+          #geom_text(aes(label = n), hjust = -1) +
+          coord_flip() +
+          ggtitle("Most Frequent Departments") +
+          theme_bw() +
+          labs(x = NULL, y = "count") +
+          theme(legend.position="none")
+      ) %>% #layout(height = 600) %>%
+        config(displayModeBar = F)
+      
+      return(fig1)
+    }
     
   })
   
