@@ -337,18 +337,18 @@ shinyServer(function(input, output) {
   #instruction DT table
   #
   output$instruction_DT <- DT::renderDataTable(Sortie_instruction(),
-                                                    options = list(scrollX = TRUE),
-                                                    rownames = FALSE)
+                                               options = list(scrollX = TRUE),
+                                               rownames = FALSE)
   
   #outreach data table
   output$outreach_DT <- DT::renderDataTable(Sortie_outreach(),
-                                                 options = list(scrollX = TRUE),
-                                                 rownames = FALSE)
+                                            options = list(scrollX = TRUE),
+                                            rownames = FALSE)
   
   #consults 
   output$consults_DT <- DT::renderDataTable(Sortie_consults(),
-                                                 options = list(scrollX = TRUE),
-                                                 rownames = FALSE)
+                                            options = list(scrollX = TRUE),
+                                            rownames = FALSE)
   
   #info/RAD
   output$info_DT <- DT::renderDataTable(Sortie_info_RAD(),
@@ -452,9 +452,9 @@ shinyServer(function(input, output) {
     num_departments <- length(unique(consults$fuzzy_department))
     
     return(paste("There were",num_consults, "consults reaching",
-                   num_people_consulted, "people in", 
-                   num_departments, "unique departments. There 
-                 were approximately", num_hours, "hours spent on consultations."))
+                 num_people_consulted, "people in", 
+                 num_departments, "unique departments. There 
+                 were approximately",num_hours,"hours spent on consultations."))
   })
   
   output$info_stats <- renderText({
@@ -540,7 +540,7 @@ shinyServer(function(input, output) {
       #let user select minimum n of dept
       n_department <- input$n
       #filter for n 
-      dept_counts <- dept_counts[dept_counts$n >= n_department,]
+      dept_counts <- dept_counts[1:n_department,]
       
       #make the title  reactive to n
       title <- paste("Most Consulted Departments (n >= ", 
@@ -576,7 +576,7 @@ shinyServer(function(input, output) {
       #let user select minimum n of dept
       n_department <- input$n
       #filter for n 
-      dept_counts <- dept_counts[dept_counts$n >= n_department,]
+      dept_counts <- dept_counts[1:n_department,]
       
       #make the title  reactive to n
       title <- paste("Most Consulted Departments (n >= ", 
@@ -764,7 +764,7 @@ shinyServer(function(input, output) {
     
     #let user select minimum n of dept
     n_category <- input$n_category
-    categories <- categories[categories$n >= n_category,]
+    categories <- categories[1:n_category,]
     
     # plot as col plot
     fig <- ggplotly(
@@ -1111,7 +1111,7 @@ shinyServer(function(input, output) {
       #let user select minimum n of dept
       n_department <- input$n_gis
       #filter for n 
-      dept_counts <- dept_counts[dept_counts$n >= n_department,]
+      dept_counts <- dept_counts[1:n_department,]
       
       #make the title  reactive to n
       title <- paste("Most Consulted Departments (n >= ", 
@@ -1147,7 +1147,7 @@ shinyServer(function(input, output) {
       #let user select minimum n of dept
       n_department <- input$n_gis
       #filter for n 
-      dept_counts <- dept_counts[dept_counts$n >= n_department,]
+      dept_counts <- dept_counts[1:n_department,]
       
       #make the title  reactive to n
       title <- paste("Most Consulted Departments (n >= ", 
