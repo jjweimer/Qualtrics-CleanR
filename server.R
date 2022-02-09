@@ -5,6 +5,7 @@ library(ggplot2)
 library(plotly)
 library(DT) #for better tables
 library(stringdist) #fuzzy mathching
+library(rintrojs) #js library for intro
 
 #require fuzzy match, helper functions
 source('fuzzy_match.R', local = TRUE)
@@ -14,7 +15,22 @@ source("week_quarter_helper.R", local = TRUE)
 options(shiny.maxRequestSize = 30*1024^2)
 
 # Define server logic 
-shinyServer(function(input, output) {
+shinyServer(function(input, output,session) {
+  
+  
+  ##############################
+  ####### Tutorial Logic    ####
+  ##############################
+  
+  observeEvent(input$help,
+               introjs(session, 
+                       options = list("nextLabel" = "Next",
+                                               "prevLabel" = "Previous",
+                                               "skipLabel" = ""
+                                      ),
+                       events = list("oncomplete" = I('alert("Tutorial Complete!")'))
+                       )
+  )
 
   ###################################################################
   ### Cleaned user input Qualtrics Data by service type  ############
