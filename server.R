@@ -4,7 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(plotly)
 library(DT) #for better tables
-library(stringdist) #fuzzy mathching
+library(stringdist) #fuzzy matching
 library(rintrojs) #js library for intro
 
 #require fuzzy match, helper functions
@@ -36,8 +36,8 @@ shinyServer(function(input, output,session) {
   ### Cleaned user input Qualtrics Data by service type  ############
   ###################################################################
 
-  #clean instruction data, return data frame
-  Sortie_instruction <- reactive({
+  #read user inputted data set once
+  Sortie_master <- reactive({
     
     inFile <- input$file1
     
@@ -46,6 +46,18 @@ shinyServer(function(input, output,session) {
     
     #read in the user data
     user_data <- read.csv(inFile$datapath)
+    return(user_data)
+    
+  })
+  
+  #clean instruction data, return data frame
+  Sortie_instruction <- reactive({
+    
+    #read in the user data
+    user_data <- Sortie_master()
+    
+    if (is.null(user_data))
+      return(NULL)
     
     #now clean data for instruction_data
     instruction <- user_data %>% select(Q2,Q3, Q16, Q192.1, Q17, Q21)
@@ -93,13 +105,12 @@ shinyServer(function(input, output,session) {
   
   #clean outreach data, return data frame
   Sortie_outreach <- reactive({
-    inFile <- input$file1
+   
+     #read in the user data
+    user_data <- Sortie_master()
     
-    if (is.null(inFile))
+    if (is.null(user_data))
       return(NULL)
-    
-    #read in the user data
-    user_data <- read.csv(inFile$datapath, stringsAsFactors = FALSE)
     
     #now clean data for outreach_data
     outreach <- user_data %>% select(Q2,Q3, Q156, Q198, Q174, Q182, Q184, 
@@ -157,13 +168,12 @@ shinyServer(function(input, output,session) {
   
   #clean consults data, return data frame
   Sortie_consults <- reactive({
-    inFile <- input$file1
-    
-    if (is.null(inFile))
-      return(NULL)
     
     #read in the user data
-    user_data <- read.csv(inFile$datapath)
+    user_data <- Sortie_master()
+    
+    if (is.null(user_data))
+      return(NULL)
     
     #now clean data for consults_data
     consults <- user_data %>% select(Q2,Q3,Q38,Q39,Q40,Q42,Q43,Q44,Q45)
@@ -226,13 +236,11 @@ shinyServer(function(input, output,session) {
   
   Sortie_info_RAD <- reactive({
     
-    inFile <- input$file1
-    
-    if (is.null(inFile))
-      return(NULL)
-    
     #read in the user data
-    user_data <- read.csv(inFile$datapath)
+    user_data <- Sortie_master()
+    
+    if (is.null(user_data))
+      return(NULL)
     
     #now clean for info/RAD data
     info <- user_data[user_data$Q2 %in% c("RAD","Info Desk"),
@@ -278,21 +286,20 @@ shinyServer(function(input, output,session) {
   
   Sortie_data_gis <- reactive({
     
-    inFile <- input$file1
-    
-    if (is.null(inFile))
-      return(NULL)
-    
     #read in the user data
-    user_data <- read.csv(inFile$datapath)
+    user_data <- Sortie_master()
+    
+    if (is.null(user_data))
+      return(NULL)
     
     #select the columns/rows we need
     gis_lab <- user_data[user_data$Q2 == "Data/GIS Lab",]
     gis_lab <- gis_lab %>% select(c("RecordedDate","Q2","Q49","Q50","Q51",
-                                    "Q52","Q53"))
+                                    "Q52","Q53",'Q89','Q90'))
     #colnames
     colnames(gis_lab) <- c("RecordedDate","location","entry_type","user_status",
-                           "department","visit_purpose","question_type")
+                           "department","visit_purpose","question_type",
+                           "date","hour")
     
     #convert RecordedDate to useful date-times
     #date time conversion
@@ -300,9 +307,15 @@ shinyServer(function(input, output,session) {
                                  format = "%m/%d/%Y %H:%M", 
                                  tz = "America/Los_Angeles")
     
+    #fill in missing "date" values with recordeddate
+    gis_lab$date[is.na(gis_lab$date) | gis_lab$date == ""] <- format(gis_lab$date_time[is.na(gis_lab$date) | gis_lab$date == ""], 
+                                                                     format = "%m/%d/%Y")
+    #convert to date class
+    gis_lab$date <- mdy(gis_lab$date)
+    
     #extract year and week
-    gis_lab$year <-  format(gis_lab$date_time,format =  '%Y')
-    gis_lab$week <- isoweek(gis_lab$date_time)
+    gis_lab$year <-  format(gis_lab$date,format =  '%Y')
+    gis_lab$week <- isoweek(gis_lab$date)
     
     #week of quarter and quarter
     gis_lab <- week_to_quarter(gis_lab)
@@ -351,7 +364,6 @@ shinyServer(function(input, output,session) {
   ###################################################################
   
   #instruction DT table
-  #
   output$instruction_DT <- DT::renderDataTable(Sortie_instruction(),
                                                options = list(scrollX = TRUE),
                                                rownames = FALSE)
@@ -842,7 +854,7 @@ shinyServer(function(input, output,session) {
     
   })
   
-  ## instruction over time
+  ## instruction events over time
   output$instruction_time_plot <- renderPlotly({
   
     #return null if no file yet, avoids ugly error code
@@ -853,8 +865,12 @@ shinyServer(function(input, output,session) {
     #read in df
     instruction <- Sortie_instruction()
     
-    weekly_data <- instruction %>% group_by(week,year) %>%
-      count(week)
+    #user format selection
+    format <- input$instruction_format_selector_2
+    #filter by inputted format
+    if(format != "All"){
+      instruction <- instruction[instruction$format == format,]
+    } 
     
     user_instruction_scale <- input$instruction_scale
     
@@ -911,6 +927,58 @@ shinyServer(function(input, output,session) {
       
       return(fig2)
     }
+    
+  })
+  
+  #number of people instructed over time
+  output$instruction_num_people_time <- renderPlotly({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
+    #read in df
+    instruction <- Sortie_instruction()
+    
+    #selector input
+    format <- input$instruction_format_selector
+    
+    if(format == "All"){
+      #aggregate data for weekly counts of instructed people
+      weekly_instructed <- instruction %>% group_by(week,year) %>%
+        mutate(weekly_num_instructed = sum(num_attendants)) %>%
+        group_by(week,year) %>% slice(1)
+      
+     
+    } else {
+      
+      #aggregate data for weekly counts of instructed people
+      weekly_instructed <- instruction[instruction$format == format,] %>%
+        group_by(week,year) %>%
+        mutate(weekly_num_instructed = sum(num_attendants)) %>%
+        group_by(week,year) %>% slice(1)
+      
+    }
+    
+    #plot
+    fig <- ggplotly(
+      weekly_instructed %>%
+        ggplot(aes(x = week, y = weekly_num_instructed, fill = year)) +
+        geom_bar(stat = 'identity') +
+        ggtitle("Weekly People Instructed") +
+        labs(x = NULL, y = "People Instructed") +
+        theme_bw() +
+        scale_x_continuous(breaks = month_numeric, 
+                           labels = month_label)
+      
+    )%>%
+      config(displaylogo = FALSE) %>%
+      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
+                                        "zoom2d","lasso2d",
+                                        "pan2d","autoscale2d",
+                                        "select2d"))
+    return(fig)
     
   })
   
@@ -1187,6 +1255,62 @@ shinyServer(function(input, output,session) {
     
   })
   
+  #gis lab hourly traffic
+  output$gis_lab_hourly <- renderPlotly({
+    
+    #return null if no file yet, avoids ugly error code
+    if(is.null(input$file1)){
+      return(NULL)
+    }
+    
+    #read in the user data
+    gis_lab <- Sortie_data_gis() #return Sortie function
+    
+    #aggregate hourly traffic counts
+    hourly <- gis_lab %>% group_by(hour) %>%
+      count(hour)
+    hourly <- hourly[hourly$hour != "",]
+    
+    #convert to factor for custom ordering
+    hourly$hour <- factor(hourly$hour, levels = c("8:00 AM",
+                                                  "9:00 AM",
+                                                  "10:00 AM",
+                                                  "11:00 AM",
+                                                  "12:00 PM",
+                                                  "1:00 PM",
+                                                  "2:00 PM",
+                                                  "3:00 PM",
+                                                  "4:00 PM",
+                                                  "5:00 PM",
+                                                  "6:00 PM",
+                                                  "7:00 PM",
+                                                  "8:00 PM",
+                                                  "9:00 PM",
+                                                  "10:00 PM",
+                                                  "11:00 PM"))
+    
+    
+    #plot
+    fig <- ggplotly(
+      
+      hourly %>%
+        ggplot(aes(x = hour, y = n, fill = hour)) +
+        geom_bar(stat = 'identity') +
+        theme_bw() +
+        ggtitle("Hourly Lab Traffic") +
+        labs(y = "Visitors", x = NULL) +
+        theme(legend.position = NULL,
+              axis.text.x = element_text(angle = 45))
+    )%>%
+      config(displaylogo = FALSE) %>%
+      layout(showlegend = FALSE) %>% 
+      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
+                                        "lasso2d",
+                                        "pan2d","autoscale2d","select2d"))
+    
+    return(fig)
+    
+  })
 
   #################################################
   ## FILE DOWNLOADS   #############################

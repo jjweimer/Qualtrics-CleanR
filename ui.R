@@ -12,7 +12,7 @@ options(shiny.maxRequestSize = 30*1024^2)
 
 #UI
 shinyUI(fixedPage(introjsUI(),
-                  theme = shinytheme("yeti"),
+                  theme = shinytheme("cosmo"),
                   
     #navbar
     introBox(
@@ -37,7 +37,7 @@ shinyUI(fixedPage(introjsUI(),
           data.intro = "Upload your Qualtrics .csv export here."
         ),
         introBox(
-          selectInput("quarter", "Choose A Quarter:", #this is our selector
+          selectInput("quarter", "Quarter:", #this is our selector
                       c("All" = "All",
                         "Winter" = "WI",
                         "Spring" = "SP",
@@ -45,7 +45,7 @@ shinyUI(fixedPage(introjsUI(),
                         "Fall" = "FA",
                         "Break" = "Break")
           ),
-          selectInput("year", "Choose A Year:", #this is our selector
+          selectInput("year", "Year:", #this is our selector
                       c("All" = "All",
                         "2022" = "2022",
                         "2021" = "2021",
@@ -138,7 +138,21 @@ shinyUI(fixedPage(introjsUI(),
                                selectInput("instruction_scale", "Aggregation Scale:", 
                                            c("Weekly" = "Weekly",
                                              "Daily" = "Daily")
-                               ),
+                                           ),
+                               selectInput("instruction_format_selector_2", "Format:",
+                                           c("All Formats" = "All",
+                                             "Online" = "Online only",
+                                             "In Person" = "In-person only",
+                                             "Hybrid" = "Hybrid (partially online, partially in-person)")
+                                           ),
+                               tags$hr(),
+                               plotlyOutput("instruction_num_people_time"),
+                               selectInput("instruction_format_selector", "Format:",
+                                           c("All Formats" = "All",
+                                             "Online" = "Online only",
+                                             "In Person" = "In-person only",
+                                             "Hybrid" = "Hybrid (partially online, partially in-person)")
+                                           ),
                                tags$hr(),
                                DT::dataTableOutput("instruction_DT")
                       ),
@@ -166,6 +180,7 @@ shinyUI(fixedPage(introjsUI(),
                                              "Daily" = "Daily")
                                ),
                                tags$hr(),
+                               h3("Service Type Counts"),
                                DT::dataTableOutput("serv_counts_DT"),
                                tags$hr(),
                                DT::dataTableOutput("info_DT")
@@ -174,6 +189,8 @@ shinyUI(fixedPage(introjsUI(),
                                #tags$hr(),
                                h3("Data & GIS Lab Statistics"),
                                textOutput("gis_stats"),
+                               tags$hr(),
+                               plotlyOutput("gis_lab_hourly"),
                                tags$hr(),
                                plotlyOutput("week_of_quarter_gis_lab"),
                                selectInput("gis_position", "Position:",
