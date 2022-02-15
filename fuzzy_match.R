@@ -215,7 +215,7 @@ fuzzy_match <- function(typo_list){
   indices <- amatch(x = typo_list, #things we want matched / regularized
                     table = department_names, #table of correct names
                     method = "jw", #jaro winkler methodology
-                    maxDist = 0.25 #unsure ideal dist.
+                    maxDist = 0.3 #unsure ideal dist.
                     #strict seems better since our dict is so big 
                     )
   
