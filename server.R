@@ -18,9 +18,7 @@ options(shiny.maxRequestSize = 30*1024^2)
 shinyServer(function(input, output,session) {
   
   
-  ##############################
-  ####### Tutorial Logic    ####
-  ##############################
+  #----- TUTORIAL ----------------------------------------------------
   
   observeEvent(input$help,
                introjs(session, 
@@ -28,13 +26,11 @@ shinyServer(function(input, output,session) {
                                                "prevLabel" = "Previous",
                                                "skipLabel" = ""
                                       ),
-                       events = list("oncomplete" = I('alert("Tutorial Complete!")'))
-                       )
-  )
+                       events = list("oncomplete" = I('alert("Tutorial Complete!")')
+                                     )
+                       ))
 
-  ###################################################################
-  ### Cleaned user input Qualtrics Data by service type  ############
-  ###################################################################
+  #----- DATA WRANGLE/CLEANING -------------------------------------------
 
   #read user inputted data set once
   Sortie_master <- reactive({
@@ -62,6 +58,12 @@ shinyServer(function(input, output,session) {
     #now clean data for instruction_data
     instruction <- user_data %>% select(Q2,Q3, Q16, Q192.1, Q17, Q21)
     instruction <- instruction[instruction$Q3 == "Instruction",]
+    
+    #check that there are nonzero number of rows
+    if(nrow(instruction) == 0){
+      return(NULL)
+    }
+    
     colnames(instruction) <- c("entered_by","service","date","format",
                                "activity","num_attendants")
     
@@ -116,7 +118,10 @@ shinyServer(function(input, output,session) {
     outreach <- user_data %>% select(Q2,Q3, Q156, Q198, Q174, Q182, Q184, 
                                      Q194, Q202, Q196)
     outreach <- outreach[outreach$Q3 == "Outreach",]
-    
+    #check that there are nonzero number of rows
+    if(nrow(outreach) == 0){
+      return(NULL)
+    }
     colnames(outreach) <- c("entered_by","service","date","type","home_program",
                             "topic","attendees","status","duration","time_prep")
     
@@ -178,6 +183,11 @@ shinyServer(function(input, output,session) {
     #now clean data for consults_data
     consults <- user_data %>% select(Q2,Q3,Q38,Q39,Q40,Q42,Q43,Q44,Q45)
     consults <- consults[consults$Q3 == 'Consultation',]
+    #check that there are nonzero number of rows
+    if(nrow(consults) == 0){
+      return(NULL)
+    }
+    
     colnames(consults) <- c("entered_by","service","date","location",
                             "department", "num_consult","category",
                             "time_spent","status")
@@ -245,6 +255,11 @@ shinyServer(function(input, output,session) {
     #now clean for info/RAD data
     info <- user_data[user_data$Q2 %in% c("RAD","Info Desk"),
                       c("RecordedDate","Q2","Q26","Q27","Q31")]
+    #check that there are nonzero number of rows
+    if(nrow(info) == 0){
+      return(NULL)
+    }
+    
     #merge columns 27 and 31 into new column
     info$pasted <- paste(info$Q27,info$Q31, sep = "")
     
@@ -296,6 +311,11 @@ shinyServer(function(input, output,session) {
     gis_lab <- user_data[user_data$Q2 == "Data/GIS Lab",]
     gis_lab <- gis_lab %>% select(c("RecordedDate","Q2","Q49","Q50","Q51",
                                     "Q52","Q53",'Q89','Q90'))
+    #check that there are nonzero number of rows
+    if(nrow(gis_lab) == 0){
+      return(NULL)
+    }
+    
     #colnames
     colnames(gis_lab) <- c("RecordedDate","location","entry_type","user_status",
                            "department","visit_purpose","question_type",
@@ -344,11 +364,8 @@ shinyServer(function(input, output,session) {
     
   })
   
-  #############################################################
-  ##### Returning updated inputs ##############################
-  #############################################################
+  #----- CHECK ALL ----------------------------------------------------
   
-  ###### check if "ALL" is selected
   check_all <- reactive({
     #filter to selected quarter
     if(input$quarter == "All" & input$year == "All"){
@@ -359,35 +376,29 @@ shinyServer(function(input, output,session) {
     }
   })
   
-  ###################################################################
-  ### Render Tables  ############
-  ###################################################################
+  #----- DATA TABLES ----------------------------------------------------
   
   #instruction DT table
   output$instruction_DT <- DT::renderDataTable(Sortie_instruction(),
                                                options = list(scrollX = TRUE),
                                                rownames = FALSE)
-  
   #outreach data table
   output$outreach_DT <- DT::renderDataTable(Sortie_outreach(),
                                             options = list(scrollX = TRUE),
                                             rownames = FALSE)
-  
   #consults 
   output$consults_DT <- DT::renderDataTable(Sortie_consults(),
                                             options = list(scrollX = TRUE),
                                             rownames = FALSE)
-  
   #info/RAD
   output$info_DT <- DT::renderDataTable(Sortie_info_RAD(),
                                         options = list(scrollX = TRUE),
                                         rownames = FALSE)
-  
   #info/RAD service counts
   desk_serv_counts <- reactive({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_info_RAD())){
       return(NULL)
     }
     
@@ -403,25 +414,21 @@ shinyServer(function(input, output,session) {
   })
   
   output$serv_counts_DT <- DT::renderDataTable(desk_serv_counts(),
-                                          options = list(scrollX = TRUE),
-                                          rownames = FALSE)
-  
+                                               options = list(scrollX = TRUE),
+                                               rownames = FALSE)
   #data GIS LAB
   output$data_gis_DT <- DT::renderDataTable(Sortie_data_gis(),
                                             options = list(scrollX = TRUE),
                                             rownames = FALSE)
-  
-  
-  ###################################################################
-  ###### Text Summary Statistics using Cleaned data  ############
-  ###################################################################
+    
+  #----- TEXT STATS ----------------------------------------------------
   
   #generate instruction text summary stats
   output$instruction_stats <- renderText({ 
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
-      return(NULL)
+    if(is.null(Sortie_instruction())){
+      return("No data found")
     }
     
     #read in the user data
@@ -443,8 +450,8 @@ shinyServer(function(input, output,session) {
   output$outreach_stats <- renderText({ 
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
-      return(NULL)
+    if(is.null(Sortie_outreach())){
+      return("No data found")
     }
     
     #read in the user data
@@ -465,8 +472,8 @@ shinyServer(function(input, output,session) {
   output$consults_stats <- renderText({ 
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
-      return(NULL)
+    if(is.null(Sortie_consults())){
+      return("No data found")
     }
     
     #read in the user data
@@ -488,8 +495,8 @@ shinyServer(function(input, output,session) {
   output$info_stats <- renderText({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
-      return(NULL)
+    if(is.null(Sortie_info_RAD())){
+      return("No data found")
     }
     
     #read in the user data
@@ -513,8 +520,8 @@ shinyServer(function(input, output,session) {
   output$gis_stats <- renderText({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
-      return(NULL)
+    if(is.null(Sortie_data_gis())){
+      return("No data found")
     }
     
     #read in the user data
@@ -540,15 +547,13 @@ shinyServer(function(input, output,session) {
     
   })
   
-  #############################################
-  ### PLOTS
-  ################################################
+  #----- PLOTS ----------------------------------------------------
   
   #consults department counts
   output$consults_graph <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_consults())){
       return(NULL)
     }
     
@@ -632,7 +637,7 @@ shinyServer(function(input, output,session) {
   output$consults_over_time <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_consults())){
       return(NULL)
     }
     
@@ -699,7 +704,7 @@ shinyServer(function(input, output,session) {
   output$intra_quarter_consults <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_consults())){
       return(NULL)
     }
     
@@ -739,7 +744,7 @@ shinyServer(function(input, output,session) {
   output$consult_locations <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_consults())){
       return(NULL)
     }
     
@@ -779,7 +784,7 @@ shinyServer(function(input, output,session) {
   output$consult_categories <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_consults())){
       return(NULL)
     }
     
@@ -818,7 +823,7 @@ shinyServer(function(input, output,session) {
   output$intra_quarter_instruction <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_instruction())){
       return(NULL)
     }
     
@@ -858,7 +863,7 @@ shinyServer(function(input, output,session) {
   output$instruction_time_plot <- renderPlotly({
   
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_instruction())){
       return(NULL)
     }
     
@@ -876,7 +881,7 @@ shinyServer(function(input, output,session) {
     
     if(user_instruction_scale == "Weekly"){
       
-      #agregate weekly
+      #aggregate weekly
       weekly_data <- instruction %>% group_by(week,year) %>%
         count(week)
       
@@ -934,7 +939,7 @@ shinyServer(function(input, output,session) {
   output$instruction_num_people_time <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_instruction())){
       return(NULL)
     }
     
@@ -985,7 +990,7 @@ shinyServer(function(input, output,session) {
   #info / RAD week of quarter
   output$intra_quarter_RAD <- renderPlotly({
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_info_RAD())){
       return(NULL)
     }
     
@@ -1024,7 +1029,7 @@ shinyServer(function(input, output,session) {
   output$info_time_plot <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_info_RAD())){
       return(NULL)
     }
     
@@ -1091,7 +1096,7 @@ shinyServer(function(input, output,session) {
   output$week_of_quarter_gis_lab <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_data_gis())){
       return(NULL)
     }
     
@@ -1131,7 +1136,7 @@ shinyServer(function(input, output,session) {
   output$gis_lab_per_week <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_data_gis())){
       return(NULL)
     }
     
@@ -1175,7 +1180,7 @@ shinyServer(function(input, output,session) {
   output$gis_lab_departments <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_data_gis())){
       return(NULL)
     }
     
@@ -1259,7 +1264,7 @@ shinyServer(function(input, output,session) {
   output$gis_lab_hourly <- renderPlotly({
     
     #return null if no file yet, avoids ugly error code
-    if(is.null(input$file1)){
+    if(is.null(Sortie_data_gis())){
       return(NULL)
     }
     
@@ -1312,9 +1317,8 @@ shinyServer(function(input, output,session) {
     
   })
 
-  #################################################
-  ## FILE DOWNLOADS   #############################
-  ################################################
+  
+  #----- FILE DOWNLOADS --------------------------------------------------
   
   output$downloadConsults <-downloadHandler(
     filename = function(){
@@ -1363,5 +1367,4 @@ shinyServer(function(input, output,session) {
   )
   
 })
-#####################################################################
-############# END SERVER   ##########################################
+#----- END SERVER ----------------------------------------------------
