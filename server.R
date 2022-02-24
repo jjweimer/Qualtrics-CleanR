@@ -56,7 +56,8 @@ shinyServer(function(input, output,session) {
       return(NULL)
     
     #now clean data for instruction_data
-    instruction <- user_data %>% select(Q2,Q3, Q16, Q192.1, Q17, Q21)
+    instruction <- user_data %>% select(Q2, Q3, Q16, Q192.1, Q17, 
+                                        Q14, Q15, Q21, Q197_1, Q197_2)
     instruction <- instruction[instruction$Q3 == "Instruction",]
     
     #check that there are nonzero number of rows
@@ -65,7 +66,9 @@ shinyServer(function(input, output,session) {
     }
     
     colnames(instruction) <- c("entered_by","service","date","format",
-                               "activity","num_attendants")
+                               "program", "co_instructor", "activity",
+                               "num_attendants","sessions_in_person",
+                               "sessions_online")
     
     #make num_attendants numeric
     instruction$num_attendants <- as.numeric(instruction$num_attendants)
@@ -91,6 +94,14 @@ shinyServer(function(input, output,session) {
     #month-day
     instruction <- month_day(instruction)
     
+    #total sessions
+    instruction$sessions_in_person <- as.numeric(instruction$sessions_in_person)
+    instruction$sessions_online <- as.numeric(instruction$sessions_online)
+    instruction$sessions_in_person[is.na(instruction$sessions_in_person)] <- 0
+    instruction$sessions_online[is.na(instruction$sessions_online)] <- 0
+    instruction$sessions_total <- instruction$sessions_in_person + instruction$sessions_online
+    instruction <- instruction %>% relocate(sessions_total, .after = sessions_online)
+    
     #filter to selected quarter
     if(input$quarter != "All"){
       instruction <- instruction %>% filter(quarter == input$quarter)
@@ -115,15 +126,18 @@ shinyServer(function(input, output,session) {
       return(NULL)
     
     #now clean data for outreach_data
-    outreach <- user_data %>% select(Q2,Q3, Q156, Q198, Q174, Q182, Q184, 
-                                     Q194, Q202, Q196)
+    outreach <- user_data %>% select(Q2,Q3, Q156, Q198, Q174, Q182, Q170 ,Q184,
+                                     Q194, Q202, Q196,Q178, Q178_5_TEXT, Q180, 
+                                     Q180_5_TEXT, Q168)
     outreach <- outreach[outreach$Q3 == "Outreach",]
     #check that there are nonzero number of rows
     if(nrow(outreach) == 0){
       return(NULL)
     }
     colnames(outreach) <- c("entered_by","service","date","type","home_program",
-                            "topic","attendees","status","duration","time_prep")
+                            "topic","collaborators","attendees","status",
+                            "duration","time_prep","outcome1","outcome2",
+                            "outcome3","outcome4","assessment")
     
     #drop empty obs
     outreach <- outreach[!is.na(outreach$date),]
