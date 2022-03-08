@@ -1,6 +1,5 @@
-####################################################################
-#############  HELPER OBJECTS  #####################################
-####################################################################
+
+#-------------------  HELPER OBJECTS  ---------------------------------------
 
 #create month labels for weekly aggregation
 month <- seq(as.Date("2020-01-01"), 
@@ -17,8 +16,6 @@ month_label <- format(month, format = "%b")
 month_2 <- c("01-01", "02-01", "03-01", "04-01", "05-01", "06-01",
              "07-01", "08-01", "09-01", "10-01", "11-01", "12-01")
 
-
-
 month_days_list <-  seq(as.Date("2020-01-01"), 
                         as.Date("2020-12-31"), 
                         by = "1 day")
@@ -27,68 +24,45 @@ month_days_list <- format(month_days_list, format = "%m-%d")
 month_days_list <- data.frame(month_day = month_days_list,
                               year = '2020')
 
-####################################################################
-########## HELPER FUNCTIONS ########################################
-###################################################################
+
+#------------------- HELPER FUNCTIONS --------------------------------------
 
 ## Helper function for determining quarters by year
 week_to_quarter <- function(df){
-  
   #use isoweek(mdy("12/14/19")) (month/day/year) (needs lubridate)
   # while browsing academic calendar to quickly get week cutoffs
-  
   #init empty quarter column
   df$quarter <- NA
   
-  #for 2018
-  df$quarter[df$week >=2 & df$week <= 12 &
-               df$year == 2018] <- "WI"
-  df$quarter[df$week >=14 & df$week <= 24 & 
-               df$year == 2018] <- "SP"
-  df$quarter[df$week >=27 & df$week <= 36 &
-               df$year == 2018] <- "SU"
-  df$quarter[df$week >= 39 & df$week <= 50 &
-               df$year == 2018] <- "FA"
+  #2018
+  df$quarter[df$week %in% 2:12 & df$year == 2018] <- "WI"
+  df$quarter[df$week %in% 14:24 & df$year == 2018] <- "SP"
+  df$quarter[df$week %in% 27:36 & df$year == 2018] <- "SU"
+  df$quarter[df$week %in% 39:50 & df$year == 2018] <- "FA"
   
   #for 2019
-  df$quarter[df$week >=2 & df$week <= 12 &
-               df$year == 2019] <- "WI"
-  df$quarter[df$week >=14 & df$week <= 24 & 
-               df$year == 2019] <- "SP"
-  df$quarter[df$week >=27 & df$week <= 36 &
-               df$year == 2019] <- "SU"
-  df$quarter[df$week >= 39 & df$week <= 50 &
-               df$year == 2019] <- "FA"
+  df$quarter[df$week %in% 2:12 & df$year == 2019] <- "WI"
+  df$quarter[df$week %in% 14:24 & df$year == 2019] <- "SP"
+  df$quarter[df$week %in% 27:36 & df$year == 2019] <- "SU"
+  df$quarter[df$week %in% 39:50 & df$year == 2019] <- "FA"
   
   #for 2020
-  df$quarter[df$week >=2 & df$week <= 12 &
-               df$year == 2020] <- "WI"
-  df$quarter[df$week >=14 & df$week <= 24 & 
-               df$year == 2020] <- "SP"
-  df$quarter[df$week >=27 & df$week <= 36 &
-               df$year == 2020] <- "SU"
-  df$quarter[df$week >= 40 & df$week <= 51 &
-               df$year == 2020] <- "FA"
+  df$quarter[df$week %in% 2:12 & df$year == 2020] <- "WI"
+  df$quarter[df$week %in% 14:24 & df$year == 2020] <- "SP"
+  df$quarter[df$week %in% 27:36 & df$year == 2020] <- "SU"
+  df$quarter[df$week %in% 40:51 & df$year == 2020] <- "FA"
   
   #for 2021
-  df$quarter[df$week >=1 & df$week <= 11 &
-               df$year == 2021] <- "WI"
-  df$quarter[df$week >=13 & df$week <= 23 & 
-               df$year == 2021] <- "SP"
-  df$quarter[df$week >=26 & df$week <= 35 &
-               df$year == 2021] <- "SU"
-  df$quarter[df$week >= 38 & df$week <= 49 &
-               df$year == 2021] <- "FA"
+  df$quarter[df$week %in% 1:11 & df$year == 2021] <- "WI"
+  df$quarter[df$week %in% 13:23 & df$year == 2021] <- "SP"
+  df$quarter[df$week %in% 26:35 & df$year == 2021] <- "SU"
+  df$quarter[df$week %in% 38:49 & df$year == 2021] <- "FA"
   
   #for 2022
-  df$quarter[df$week >=1 & df$week <= 11 &
-               df$year == 2022] <- "WI"
-  df$quarter[df$week >=13 & df$week <= 23 & 
-               df$year == 2022] <- "SP"
-  df$quarter[df$week >=26 & df$week <= 35 &
-               df$year == 2022] <- "SU"
-  df$quarter[df$week >= 38 & df$week <= 49 &
-               df$year == 2022] <- "FA"
+  df$quarter[df$week %in% 1:11 & df$year == 2022] <- "WI"
+  df$quarter[df$week %in% 13:23 & df$year == 2022] <- "SP"
+  df$quarter[df$week %in% 26:35 & df$year == 2022] <- "SU"
+  df$quarter[df$week %in% 38:49 & df$year == 2022] <- "FA"
   
   #all other are breaks
   df$quarter[is.na(df$quarter)] <- "Break"
