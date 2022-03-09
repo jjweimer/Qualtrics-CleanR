@@ -6,9 +6,13 @@ library(ggplot2)
 library(shinythemes)
 library(DT) #for better tables
 library(rintrojs) #js library for intro
+library(shinycssloaders)
 
 #max file size 30mb for upload
 options(shiny.maxRequestSize = 30*1024^2)
+#spinner options
+options(spinner.type = 3,
+        spinner.color.background  = "#ffffff")
 
 #UI
 shinyUI(fixedPage(introjsUI(),
@@ -89,7 +93,7 @@ shinyUI(fixedPage(introjsUI(),
                                  h3("Consults Statistics"),
                                  textOutput("consults_stats"),
                                  tags$hr(),
-                                 plotlyOutput("intra_quarter_consults"),
+                                 plotlyOutput("intra_quarter_consults") %>% withSpinner(),
                                  selectInput("consults_position", "Position:",
                                              c("Stacked" = "stack",
                                                "Dodged" = "dodge")
@@ -100,13 +104,13 @@ shinyUI(fixedPage(introjsUI(),
                                  data.intro = "These are the tabs where plots and statistics will be generated.
                                                They are seperated by service category for easier viewing."
                                ),
-                               plotlyOutput("consults_over_time"),
+                               plotlyOutput("consults_over_time") %>% withSpinner(),
                                selectInput("consults_scale", "Aggregation Scale:",
                                            c("Weekly" = "Weekly",
                                              "Daily" = "Daily")
                                ),
                                tags$hr(),
-                               plotlyOutput("consults_graph"),
+                               plotlyOutput("consults_graph") %>% withSpinner(),
                                numericInput("n","Top n Departments:"
                                             ,10,min = 1),
                                selectInput("is_fuzzy", "Select Matched or Raw Departments:", 
@@ -117,24 +121,24 @@ shinyUI(fixedPage(introjsUI(),
                                #this plot is shy ??
                                #plotlyOutput("consult_locations"),
                                #tags$hr(),
-                               plotlyOutput("consult_categories"),
+                               plotlyOutput("consult_categories") %>% withSpinner(),
                                numericInput("n_category","Top n Categories:"
                                             ,10,min = 1),
                                tags$hr(),
-                               DT::dataTableOutput("consults_DT")
-                      ),
+                               DT::dataTableOutput("consults_DT") %>% withSpinner()
+                               ),
                       tabPanel("Instruction",
                                #tags$hr(),
                                h3("Instruction Statistics"),
                                textOutput("instruction_stats"),
                                tags$hr(),
-                               plotlyOutput("intra_quarter_instruction"),
+                               plotlyOutput("intra_quarter_instruction") %>% withSpinner(),
                                selectInput("instruction_position", "Position:",
                                            c("Stacked" = "stack",
                                              "Dodged" = "dodge")
                                ),
                                tags$hr(),
-                               plotlyOutput("instruction_time_plot"),
+                               plotlyOutput("instruction_time_plot") %>% withSpinner(),
                                selectInput("instruction_scale", "Aggregation Scale:", 
                                            c("Weekly" = "Weekly",
                                              "Daily" = "Daily")
@@ -146,7 +150,7 @@ shinyUI(fixedPage(introjsUI(),
                                              "Hybrid" = "Hybrid (partially online, partially in-person)")
                                            ),
                                tags$hr(),
-                               plotlyOutput("instruction_num_people_time"),
+                               plotlyOutput("instruction_num_people_time") %>% withSpinner(),
                                selectInput("instruction_format_selector", "Format:",
                                            c("All Formats" = "All",
                                              "Online" = "Online only",
@@ -154,53 +158,53 @@ shinyUI(fixedPage(introjsUI(),
                                              "Hybrid" = "Hybrid (partially online, partially in-person)")
                                            ),
                                tags$hr(),
-                               DT::dataTableOutput("instruction_DT")
-                      ),
+                               DT::dataTableOutput("instruction_DT") %>% withSpinner()
+                               ),
                       tabPanel("Outreach",
                                #tags$hr(),
                                h3("Outreach Statistics"),
                                textOutput("outreach_stats"),
                                tags$hr(),
-                               DT::dataTableOutput("outreach_DT"),
-                      ),
+                               DT::dataTableOutput("outreach_DT") %>% withSpinner(),
+                               ),
                       tabPanel("Info / RAD",
                                #tags$hr(),
                                h3("RAD / Info Desk Statistics"),
                                textOutput("info_stats"),
                                tags$hr(),
-                               plotlyOutput("intra_quarter_RAD"),
+                               plotlyOutput("intra_quarter_RAD") %>% withSpinner(),
                                selectInput("info_position", "Position:",
                                            c("Stacked" = "stack",
                                              "Dodged" = "dodge")
                                ),
                                tags$hr(),
-                               plotlyOutput("info_time_plot"),
+                               plotlyOutput("info_time_plot") %>% withSpinner(),
                                selectInput("info_scale", "Aggregation Scale:", 
                                            c("Weekly" = "Weekly",
                                              "Daily" = "Daily")
                                ),
                                tags$hr(),
                                h3("Service Type Counts"),
-                               DT::dataTableOutput("serv_counts_DT"),
+                               DT::dataTableOutput("serv_counts_DT") %>% withSpinner(),
                                tags$hr(),
-                               DT::dataTableOutput("info_DT")
-                      ),
+                               DT::dataTableOutput("info_DT") %>% withSpinner()
+                               ),
                       tabPanel("Data & GIS Lab",
                                #tags$hr(),
                                h3("Data & GIS Lab Statistics"),
                                textOutput("gis_stats"),
                                tags$hr(),
-                               plotlyOutput("gis_lab_hourly"),
+                               plotlyOutput("gis_lab_hourly") %>% withSpinner(),
                                tags$hr(),
-                               plotlyOutput("week_of_quarter_gis_lab"),
+                               plotlyOutput("week_of_quarter_gis_lab") %>% withSpinner(),
                                selectInput("gis_position", "Position:",
                                            c("Stacked" = "stack",
                                              "Dodged" = "dodge")
                                ),
                                tags$hr(),
-                               plotlyOutput("gis_lab_per_week"),
+                               plotlyOutput("gis_lab_per_week") %>% withSpinner(),
                                tags$hr(),
-                               plotlyOutput("gis_lab_departments"),
+                               plotlyOutput("gis_lab_departments") %>% withSpinner(),
                                numericInput("n_gis","Top n Departments:"
                                             ,10,min = 1),
                                selectInput("is_fuzzy_gis", "Select Matched or Raw Departments:", 
@@ -208,7 +212,8 @@ shinyUI(fixedPage(introjsUI(),
                                              "Raw" = "Raw")
                                ),
                                tags$hr(),
-                               DT::dataTableOutput("data_gis_DT"))
+                               DT::dataTableOutput("data_gis_DT") %>% withSpinner()
+                               )
           ), #end tabs
       ) #end main panel   
     
