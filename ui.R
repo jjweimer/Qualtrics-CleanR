@@ -11,7 +11,7 @@ library(bslib)
 
 #max file size 30mb for upload
 options(shiny.maxRequestSize = 30*1024^2)
-#spinner options
+#spinner options from shinycssloaders
 options(spinner.type = 3,
         spinner.color.background  = "#ffffff",
         spinner.color = "#00629B")
@@ -66,12 +66,7 @@ shinyUI(fixedPage(
         ),
         data.step = 2,
         data.intro = "Upload your Qualtrics .csv export here."
-      ),
-      
-    ),
-    column(
-      4,
-      
+      )
     )
   ),
   
@@ -120,6 +115,7 @@ shinyUI(fixedPage(
       tabsetPanel(type='pills',
                   tabPanel("Consults",
                            tags$hr(),
+                           downloadButton("downloadConsults", "Download Consults"),
                            introBox(
                              h3("Consults Statistics"),
                              textOutput("consults_stats"),
@@ -160,6 +156,8 @@ shinyUI(fixedPage(
                   ),
                   tabPanel("Instruction",
                            tags$hr(),
+                           downloadButton("downloadInstruction", "Download Instruction"),
+                           
                            h3("Instruction Statistics"),
                            textOutput("instruction_stats"),
                            tags$hr(),
@@ -193,6 +191,8 @@ shinyUI(fixedPage(
                   ),
                   tabPanel("Outreach",
                            tags$hr(),
+                           downloadButton("downloadOutreach", "Download Outreach"),
+                           
                            h3("Outreach Statistics"),
                            textOutput("outreach_stats"),
                            tags$hr(),
@@ -200,6 +200,8 @@ shinyUI(fixedPage(
                   ),
                   tabPanel("Info / RAD",
                            tags$hr(),
+                           downloadButton("downloadInfo_RAD", "Download Info/RAD"),
+                           
                            h3("RAD / Info Desk Statistics"),
                            textOutput("info_stats"),
                            tags$hr(),
@@ -222,6 +224,8 @@ shinyUI(fixedPage(
                   ),
                   tabPanel("Data & GIS Lab",
                            tags$hr(),
+                           downloadButton("downloadDataGISLab", "Download Data & GIS"),
+                           
                            h3("Data & GIS Lab Statistics"),
                            textOutput("gis_stats"),
                            tags$hr(),
