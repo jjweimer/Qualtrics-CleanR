@@ -8,8 +8,8 @@ library(stringdist) #fuzzy matching
 library(rintrojs) #js library for intro
 
 #require fuzzy match, helper functions
-source('fuzzy_match.R', local = TRUE)
-source("week_quarter_helper.R", local = TRUE)
+source('functions/fuzzy_match.R', local = TRUE)
+source("functions/week_quarter_helper.R", local = TRUE)
 
 #max file size 30mb for upload
 options(shiny.maxRequestSize = 30*1024^2)
