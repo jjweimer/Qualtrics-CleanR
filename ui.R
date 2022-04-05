@@ -114,10 +114,25 @@ shinyUI(fixedPage(
       tabsetPanel(type='pills',
                   tabPanel("Consults",
                            tags$hr(),
-                           downloadButton("downloadConsults", "Download Consults"),
-                           h3("Consults Statistics"),
-                           textOutput("consults_stats"),
-                           tags$hr(),
+                           fluidRow(
+                             column(
+                               7,
+                               h2("Consults Statistics")
+                             ),
+                             column(
+                               5,
+                               style = "margin-top:20px",
+                               align = "right",
+                               downloadButton("downloadConsults", "Download Consults")
+                             )
+                           ),
+                           fluidRow(
+                             column(
+                               12,
+                               textOutput("consults_stats"),
+                               tags$hr()
+                             )
+                           ),
                            plotlyOutput("intra_quarter_consults") %>% withSpinner(),
                            selectInput("consults_position", "Position:",
                                        c("Stacked" = "stack",
@@ -138,9 +153,6 @@ shinyUI(fixedPage(
                                          "Raw" = "Raw")
                            ),
                            tags$hr(),
-                           #this plot is shy ??
-                           #plotlyOutput("consult_locations"),
-                           #tags$hr(),
                            plotlyOutput("consult_categories") %>% withSpinner(),
                            numericInput("n_category","Top n Categories:"
                                         ,10,min = 1),
@@ -149,11 +161,25 @@ shinyUI(fixedPage(
                   ),
                   tabPanel("Instruction",
                            tags$hr(),
-                           downloadButton("downloadInstruction", "Download Instruction"),
-                           
-                           h3("Instruction Statistics"),
-                           textOutput("instruction_stats"),
-                           tags$hr(),
+                           fluidRow(
+                             column(
+                               7,
+                               h2("Instruction Statistics")
+                             ),
+                             column(
+                               5,
+                               style = "margin-top:20px",
+                               align = "right",
+                               downloadButton("downloadInstruction", "Download Instruction")
+                             )
+                           ),
+                           fluidRow(
+                             column(
+                               12,
+                               textOutput("instruction_stats"),
+                               tags$hr()
+                             )
+                           ),
                            plotlyOutput("intra_quarter_instruction") %>% withSpinner(),
                            selectInput("instruction_position", "Position:",
                                        c("Stacked" = "stack",
@@ -184,31 +210,57 @@ shinyUI(fixedPage(
                   ),
                   tabPanel("Outreach",
                            tags$hr(),
-                           downloadButton("downloadOutreach", "Download Outreach"),
-                           
-                           h3("Outreach Statistics"),
-                           textOutput("outreach_stats"),
-                           tags$hr(),
-                           DT::dataTableOutput("outreach_DT") %>% withSpinner(),
+                           fluidRow(
+                             column(
+                               7,
+                               h2("Outreach Statistics")
+                             ),
+                             column(
+                               5,
+                               style = "margin-top:20px",
+                               align = "right",
+                               downloadButton("downloadOutreach", "Download Outreach")
+                             )
+                           ),
+                           fluidRow(
+                             column(
+                               12,
+                               textOutput("outreach_stats"),
+                               tags$hr(),
+                               DT::dataTableOutput("outreach_DT") %>% withSpinner()
+                             )
+                           ),
                   ),
                   tabPanel("Info / RAD",
                            tags$hr(),
-                           downloadButton("downloadInfo_RAD", "Download Info/RAD"),
-                           
-                           h3("RAD / Info Desk Statistics"),
-                           textOutput("info_stats"),
-                           tags$hr(),
+                           fluidRow(
+                             column(
+                               7,
+                               h2("RAD / Info Desk Statistics")
+                             ),
+                             column(
+                               5,
+                               style = "margin-top:20px",
+                               align = "right",
+                               downloadButton("downloadInfo_RAD", "Download Info/RAD")
+                             )
+                           ),
+                           fluidRow(
+                             column(
+                               12,
+                               textOutput("info_stats"),
+                               tags$hr()
+                             )
+                           ),
                            plotlyOutput("intra_quarter_RAD") %>% withSpinner(),
                            selectInput("info_position", "Position:",
                                        c("Stacked" = "stack",
-                                         "Dodged" = "dodge")
-                           ),
+                                         "Dodged" = "dodge")),
                            tags$hr(),
                            plotlyOutput("info_time_plot") %>% withSpinner(),
                            selectInput("info_scale", "Aggregation Scale:", 
                                        c("Weekly" = "Weekly",
-                                         "Daily" = "Daily")
-                           ),
+                                         "Daily" = "Daily")),
                            tags$hr(),
                            h3("Service Type Counts"),
                            DT::dataTableOutput("serv_counts_DT") %>% withSpinner(),

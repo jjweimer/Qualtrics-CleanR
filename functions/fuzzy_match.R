@@ -1,5 +1,4 @@
 fuzzy_match <- function(typo_list){
-  
   #takes in column vector of department names
   #outputs column vector of matched names
   #crosswalks dept codes to dept names
@@ -214,38 +213,31 @@ fuzzy_match <- function(typo_list){
                     maxDist = 0.3 #unsure ideal dist.
                     #strict seems better since our dict is so big 
                     )
-  
   ## assign to new obj
   matched_departments <- department_names[indices]
-  
   #crosswalk dept codes to dept names
-  counter <- 1
   codes <- c("ANTH","BENG","BIOL",
              "CHEM","COGS","COMM","CSE","CENG",
              "DOC","DSC","ECE","ECON",
              "GPS","HDS","HDSI",
              "HIST","MATH","Music Department",
              "MAE","NANO","NENG", #NANO and NENG are both nanoengineering
-             "SIO","USP")
+             "SIO","USP","VIS","POLI")
   names <- c("Anthropology","Bioengineering","Biology",
             "Chemistry","Cognitive Science","Communication", "Computer Science", "Chemical Engineering",
             "DOC Writing Program","Data Science","Electrical & Computer Engineering","Economics",
             "Global Policy and Strategy","Human Development Sciences","Data Science",
             "History","Mathematics","Music",
             "Mechanical & Aerospace Engineering","Nanoengineering","Nanoengineering", #NANO and NENG are both nanoengineering
-            "Scripps Institute of Oceanography","Urban Studies and Planning")
+            "Scripps Institute of Oceanography","Urban Studies and Planning", "Visual Arts","Political Science")
   
-  #loop through both lists and replace 
-  for(i in codes){
-    matched_departments[matched_departments == i] <- names[counter]
-    counter <- counter + 1
+  #loop through both lists and crosswalk
+  for(i in 1:length(codes)){
+    matched_departments[matched_departments == codes[i]] <- names[i]
   }
- 
   #abbreviations to their full names
   matched_departments[matched_departments == "NOAA - SWFSC"] <- "NOAA - Southwest Fisheries Science Center"
   matched_departments[matched_departments == "SDSC"] <- "San Diego Supercomputer Center"
   matched_departments[matched_departments == "Extension"] <- "UCSD Extension"
-  
-  #
   return(matched_departments)
 }

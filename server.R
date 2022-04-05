@@ -14,6 +14,7 @@ source("functions/week_quarter_helper.R", local = TRUE)
 source("functions/filter_Sortie.R")
 source("functions/dataprep_gis_lab_hourly.R")
 source("functions/dataprep_gis_lab_departments.R")
+source("functions/clean_desk_service.R")
 source("ggtheme/my_ggtheme.R")
 
 #max file size 30mb for upload
@@ -202,17 +203,14 @@ shinyServer(function(input, output,session) {
   })
   
   Sortie_info_RAD <- reactive({
-    
     #read in the user data
     user_data <- Sortie_master()
-    
-    if (is.null(user_data))
+    if (is.null(user_data)){
       return(NULL)
-    
+    }
     #now clean for info/RAD data
     info <- user_data[user_data$Q2 %in% c("RAD","Info Desk"),
                       c("RecordedDate","Q2","Q26","Q27","Q31")]
-    
     #merge columns 27 and 31 into new column
     info$pasted <- paste(info$Q27,info$Q31, sep = "")
     #date time conversion
@@ -232,6 +230,8 @@ shinyServer(function(input, output,session) {
     info <- month_day(info)
     #filter to selected quarter
     info <- filter_Sortie(df = info, qtr = input$quarter, yr = input$year)
+    #clean services
+    info$service <- clean_desk_service(info$service)
     #check that there are nonzero number of rows
     if(nrow(info) == 0){
       return(NULL)
