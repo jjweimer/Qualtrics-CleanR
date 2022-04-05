@@ -1,9 +1,6 @@
-library(stringdist)
-
-#function to be called in server.R
 fuzzy_match <- function(typo_list){
   
-  #takes in column vector of departmet names
+  #takes in column vector of department names
   #outputs column vector of matched names
   #crosswalks dept codes to dept names
   
@@ -211,8 +208,7 @@ fuzzy_match <- function(typo_list){
     "Visiting Scholar"
   )
   
-  #amatch from stringdist::
-  indices <- amatch(x = typo_list, #things we want matched / regularized
+  indices <- stringdist::amatch(x = typo_list, #things we want matched 
                     table = department_names, #table of correct names
                     method = "jw", #jaro winkler methodology
                     maxDist = 0.3 #unsure ideal dist.

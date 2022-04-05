@@ -1,7 +1,6 @@
 dataprep_gis_lab_hourly <- function(df){
   #aggregate hourly traffic counts
-  hourly <- df %>% group_by(hour) %>%
-    count(hour)
+  hourly <- df %>% group_by(hour) %>% count(hour)
   hourly <- hourly[hourly$hour != "",]
   #convert to factor for custom ordering
   hourly$hour <- factor(

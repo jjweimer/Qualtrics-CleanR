@@ -1,4 +1,3 @@
-library(dplyr)
 filter_Sortie <- function(df, qtr, yr){
   if(qtr != "All"){
     df <- df %>% filter(quarter == qtr)

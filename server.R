@@ -27,11 +27,9 @@ shinyServer(function(input, output,session) {
   observeEvent(input$help,
                introjs(session, 
                        options = list("nextLabel" = "Next",
-                                               "prevLabel" = "Previous",
-                                               "skipLabel" = ""
-                                      ),
-                       events = list("oncomplete" = I('alert("Tutorial Complete!")')
-                                     )
+                                      "prevLabel" = "Previous",
+                                      "skipLabel" = ""),
+                       events = list("oncomplete" = I('alert("Tutorial Complete!")'))
                        ))
 
   #----- DATA WRANGLE/CLEANING -------------------------------------------

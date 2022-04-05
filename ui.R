@@ -3,7 +3,6 @@ library(lubridate)
 library(dplyr)
 library(plotly)
 library(ggplot2)
-library(shinythemes)
 library(DT) #for better tables
 library(rintrojs) #js library for intro
 library(shinycssloaders)

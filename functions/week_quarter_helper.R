@@ -140,14 +140,11 @@ month_day <- function(df){
 
 #manually clean weird year inputs
 clean_years <- function(df){
-  
   #drop rows from before 2018 for now
   df <- df[df$year >= 2018,]
-  
   df$year[df$year == 2091] <- 2019
   df$year[df$year == 2109] <- 2019
   df$year[df$year == 2921] <- 2021
-  
   return(df)
 }
 
@@ -157,11 +154,8 @@ all_daily_dates <- function(daily_data){
   
   #full join so each month-date occurs at least once
   test <- full_join(month_days_list, daily_data, by = c("month_day","year"))
-  
   #set NA counts to 0
   test$n[is.na(test$n)] <- 0
-  
   return(test)
-  
 }
 
