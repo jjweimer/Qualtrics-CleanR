@@ -115,21 +115,15 @@ shinyUI(fixedPage(
                   tabPanel("Consults",
                            tags$hr(),
                            downloadButton("downloadConsults", "Download Consults"),
-                           introBox(
-                             h3("Consults Statistics"),
-                             textOutput("consults_stats"),
-                             tags$hr(),
-                             plotlyOutput("intra_quarter_consults") %>% withSpinner(),
-                             selectInput("consults_position", "Position:",
-                                         c("Stacked" = "stack",
-                                           "Dodged" = "dodge")
-                             ),
-                             tags$hr(),
-                             #introbox args
-                             data.step = 4,
-                             data.intro = "These are the tabs where plots and statistics will be generated.
-                                               They are seperated by service category for easier viewing."
+                           h3("Consults Statistics"),
+                           textOutput("consults_stats"),
+                           tags$hr(),
+                           plotlyOutput("intra_quarter_consults") %>% withSpinner(),
+                           selectInput("consults_position", "Position:",
+                                       c("Stacked" = "stack",
+                                         "Dodged" = "dodge")
                            ),
+                           tags$hr(),
                            plotlyOutput("consults_over_time") %>% withSpinner(),
                            selectInput("consults_scale", "Aggregation Scale:",
                                        c("Weekly" = "Weekly",
@@ -223,34 +217,72 @@ shinyUI(fixedPage(
                   ),
                   tabPanel("Data & GIS Lab",
                            tags$hr(),
-                           downloadButton("downloadDataGISLab", "Download Data & GIS"),
-                           
-                           h3("Data & GIS Lab Statistics"),
-                           textOutput("gis_stats"),
-                           tags$hr(),
-                           plotlyOutput("gis_lab_hourly") %>% withSpinner(),
-                           tags$hr(),
-                           plotlyOutput("week_of_quarter_gis_lab") %>% withSpinner(),
-                           selectInput("gis_position", "Position:",
-                                       c("Stacked" = "stack",
-                                         "Dodged" = "dodge")
+                           fluidRow(
+                             column(
+                               7,
+                               h2("Data & GIS Lab Statistics")
+                               ),
+                             column(
+                               5,
+                               style = "margin-top:20px",
+                               align = "right",
+                               downloadButton("downloadDataGISLab", "Download Data & GIS")
+                             )
                            ),
-                           tags$hr(),
-                           plotlyOutput("gis_lab_per_week") %>% withSpinner(),
-                           tags$hr(),
-                           plotlyOutput("gis_lab_departments") %>% withSpinner(),
-                           numericInput("n_gis","Top n Departments:"
-                                        ,10,min = 1),
-                           selectInput("is_fuzzy_gis", "Select Matched or Raw Departments:", 
-                                       c("Matched" = "Matched",
-                                         "Raw" = "Raw")
+                           fluidRow(
+                             column(
+                               12,
+                               textOutput("gis_stats"),
+                               tags$hr()
+                               )
+                           ),
+                           fluidRow(
+                             column(
+                               12,
+                               plotlyOutput("gis_lab_hourly") %>% withSpinner(),
+                               tags$hr()
+                             )
+                           ),
+                           fluidRow(
+                             column(
+                               10,
+                               plotlyOutput("week_of_quarter_gis_lab") %>% withSpinner()
+                             ),
+                             column(
+                               2,
+                               selectInput("gis_position", "Position:",
+                                           c("Stacked" = "stack",
+                                             "Dodged" = "dodge"))
+                               )
+                           ),
+                           fluidRow(
+                             column(
+                               12,
+                               tags$hr(),
+                               plotlyOutput("gis_lab_per_week") %>% withSpinner(),
+                               tags$hr(),
+                             )
+                           ),
+                           fluidRow(
+                             column(
+                               10,
+                               plotlyOutput("gis_lab_departments") %>% withSpinner(),
+                             ),
+                             column(
+                               2,
+                               numericInput("n_gis","Top n Departments:",10,min = 1),
+                               selectInput("is_fuzzy_gis", 
+                                           "Departments:", 
+                                           c("Matched" = "Matched",
+                                             "Raw" = "Raw"))
+                             )
                            ),
                            tags$hr(),
                            DT::dataTableOutput("data_gis_DT") %>% withSpinner()
                   )
-      )
-      )
-  )
+      ) # end tabset panels
+      ) #end column 12
+  ) #end fluidrow
   
            
 ))

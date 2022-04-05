@@ -13,6 +13,7 @@ source('functions/fuzzy_match.R', local = TRUE)
 source("functions/week_quarter_helper.R", local = TRUE)
 source("functions/filter_Sortie.R")
 source("functions/dataprep_gis_lab_hourly.R")
+source("functions/dataprep_gis_lab_departments.R")
 source("ggtheme/my_ggtheme.R")
 
 #max file size 30mb for upload
@@ -956,42 +957,29 @@ shinyServer(function(input, output,session) {
   
   #week of quarter data and GIS lab use
   output$week_of_quarter_gis_lab <- renderPlotly({
-    
     #return null if no file yet, avoids ugly error code
     if(is.null(Sortie_data_gis())){
       return(NULL)
     }
-    
-    #read in the user data
-    gis_lab <- Sortie_data_gis() #return Sortie function
-    
-    weekly_data <- gis_lab %>% 
+    weekly_data <- Sortie_data_gis() %>% 
       group_by(week_of_quarter, year) %>%
       count(week_of_quarter)
-    
-    #get the selected quarter
-    q <- input$quarter
-    
-    title <- paste("Data & GIS Lab visits per week of the Quarter (",
-                   q," Quarter)", sep = '')
-    
+    #plot
     fig <- ggplotly(
       weekly_data %>% 
         ggplot(aes(x = week_of_quarter, y = n, fill = year)) +
         geom_bar(stat = "identity",position = input$gis_position) +
-        ggtitle(title) +
+        ggtitle("Lab Traffic by Week of Quarter") +
         xlim(0,11) +
         labs(y = "Number of Lab Visits", x = "Week") +
         my_ggtheme + #custom theme
         scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8,9,10,11))
-    ) %>%
-      config(displaylogo = FALSE) %>%
-      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
-                                        "lasso2d",
+    ) %>% config(displaylogo = FALSE) %>%
+      layout(xaxis=list(fixedrange=TRUE)) %>%
+      layout(yaxis=list(fixedrange=TRUE)) %>% 
+      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d","lasso2d",
                                         "pan2d","autoscale2d","select2d"))
-    
     return(fig)
-    
   })
   
   #week of year data and gis lab use
@@ -1030,6 +1018,8 @@ shinyServer(function(input, output,session) {
                            labels = month_label)
     ) %>%
       config(displaylogo = FALSE) %>%
+      layout(xaxis=list(fixedrange=TRUE)) %>%
+      layout(yaxis=list(fixedrange=TRUE)) %>% 
       config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
                                         "lasso2d",
                                         "pan2d","autoscale2d","select2d"))
@@ -1040,86 +1030,32 @@ shinyServer(function(input, output,session) {
   
   #gis lab departments
   output$gis_lab_departments <- renderPlotly({
-    
     #return null if no file yet, avoids ugly error code
     if(is.null(Sortie_data_gis())){
       return(NULL)
     }
-    
-    #read in the user data
-    gis_lab <- Sortie_data_gis() #return Sortie function
-    
-    user_choice <- input$is_fuzzy_gis
-    
-    if(user_choice == "Matched"){
-      #drop NA departments
-      gis_lab <- gis_lab[!is.na(gis_lab$fuzzy_department),]
-      
-      ##get dept counts
-      dept_counts <- gis_lab %>% group_by(fuzzy_department) %>%
-        count(fuzzy_department) %>% arrange(-n)
-      
-      #let user select minimum n of dept
-      n_department <- input$n_gis
-      #filter for n 
-      dept_counts <- dept_counts[1:n_department,]
-      
-      #make the title  reactive to n
-      title <- paste("Most Consulted Departments (n >= ", 
-                     n_department,")" , sep = '')
-      
-      fig <- ggplotly(
-        dept_counts %>%
-          ggplot(aes(x = reorder(fuzzy_department,n), y = n, fill = n)) +
-          geom_col(alpha = 1) +
-          #geom_text(aes(label = n), hjust = -1) +
-          coord_flip() +
-          ggtitle("Most Frequent Departments") +
-          my_ggtheme + #custom theme
-          labs(x = NULL, y = "count") +
-          theme(legend.position="none")
-      ) %>%
-        config(displaylogo = FALSE) %>%
-        config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
-                                          "lasso2d",
-                                          "pan2d","autoscale2d","select2d"))
-      
-      return(fig)
-      
-    } else if (user_choice == "Raw") {
-      
-      #drop NA departments
-      gis_lab <- gis_lab[!is.na(gis_lab$department),]
-      
-      ##get dept counts
-      dept_counts <- gis_lab %>% group_by(department) %>%
-        count(fuzzy_department) %>% arrange(-n)
-      
-      #let user select minimum n of dept
-      n_department <- input$n_gis
-      #filter for n 
-      dept_counts <- dept_counts[1:n_department,]
-      
-      #make the title  reactive to n
-      title <- paste("Most Consulted Departments (n >= ", 
-                     n_department,")" , sep = '')
-      
-      fig1 <- ggplotly(
-        dept_counts %>%
-          ggplot(aes(x = reorder(department,n), y = n, fill = n)) +
-          geom_col(alpha = 1,) +
-          #geom_text(aes(label = n), hjust = -1) +
-          coord_flip() +
-          ggtitle("Most Frequent Departments") +
-          my_ggtheme + #custom theme
-          labs(x = NULL, y = "count") +
-          theme(legend.position="none")
-      ) %>% #layout(height = 600) %>%
-        config(displayModeBar = F)
-      
-      return(fig1)
-    }
-    
+    #dataprep
+    dept_counts <- dataprep_gis_lab_departments(
+      df = Sortie_data_gis(), 
+      is_fuzzy = input$is_fuzzy_gis,
+      n_gis = input$n_gis)
+    #plot
+    fig <- dept_counts %>%
+      ggplot(aes(x = reorder(department,n), y = n)) +
+      geom_col(alpha = 1, fill = "#00629B") +
+      coord_flip() +
+      ggtitle("Most Frequent Departments") +
+      my_ggtheme + #custom theme
+      labs(x = NULL, y = "count") +
+      theme(legend.position="none")
+    #plotly styling
+    fig <- ggplotly(fig,tooltip = c("n")) %>%
+      config(displaylogo = FALSE) %>%
+      layout(xaxis=list(fixedrange=TRUE)) %>%
+      layout(yaxis=list(fixedrange=TRUE)) %>% 
+      config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d", "lasso2d",
+                                        "pan2d","autoscale2d","select2d"))
+    return(fig)
   })
   
   #gis lab hourly traffic
@@ -1142,6 +1078,8 @@ shinyServer(function(input, output,session) {
     )%>%
       config(displaylogo = FALSE) %>%
       layout(showlegend = FALSE) %>% 
+      layout(xaxis=list(fixedrange=TRUE)) %>%
+      layout(yaxis=list(fixedrange=TRUE)) %>% 
       config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
                                         "lasso2d",
                                         "pan2d","autoscale2d","select2d"))
