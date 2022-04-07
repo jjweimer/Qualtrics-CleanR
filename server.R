@@ -6,7 +6,9 @@ library(plotly)
 library(DT) #for better tables
 library(stringdist) #fuzzy matching
 library(rintrojs) #js library for intro
+library(shinycssloaders)
 library(bslib)
+#library(thematic)
 
 #require fuzzy match, helper functions
 source('functions/fuzzy_match.R', local = TRUE)
@@ -22,6 +24,11 @@ options(shiny.maxRequestSize = 30*1024^2)
 
 # Define server logic 
 shinyServer(function(input, output,session) {
+  
+  #-------------- THEMING ---------------------------------------
+  
+  #easily blend theme with plots
+  #thematic::thematic_shiny()
   
   
   #----- TUTORIAL ----------------------------------------------------
@@ -65,6 +72,10 @@ shinyServer(function(input, output,session) {
                                "num_attendants","sessions_in_person",
                                "sessions_online")
     
+    #check that there are nonzero number of rows
+    if(nrow(instruction) == 0){
+      return(NULL)
+    }
     #make num_attendants numeric
     instruction$num_attendants <- as.numeric(instruction$num_attendants)
     #ensure date data type
@@ -91,10 +102,6 @@ shinyServer(function(input, output,session) {
     instruction <- instruction %>% relocate(sessions_total, .after = sessions_online)
     #filter to selected quarter
     instruction <- filter_Sortie(df = instruction, qtr = input$quarter, yr = input$year)
-    #check that there are nonzero number of rows
-    if(nrow(instruction) == 0){
-      return(NULL)
-    }
     return(instruction)
   })
   
@@ -116,7 +123,10 @@ shinyServer(function(input, output,session) {
                             "topic","collaborators","attendees","status",
                             "duration","time_prep","outcome1","outcome2",
                             "outcome3","outcome4","assessment")
-    
+    #check that there are nonzero number of rows
+    if(nrow(outreach) == 0){
+      return(NULL)
+    }
     #drop empty obs
     outreach <- outreach[!is.na(outreach$date),]
     outreach <- outreach[!outreach$date == "",]
@@ -142,10 +152,6 @@ shinyServer(function(input, output,session) {
     outreach <- outreach[outreach$quarter %in% c("WI","SP","SU","FA", "Break"),]
     #filter to selected quarter
     outreach <- filter_Sortie(df = outreach, qtr = input$quarter, yr = input$year)
-    #check that there are nonzero number of rows
-    if(nrow(outreach) == 0){
-      return(NULL)
-    }
     return(outreach)
   })
   
@@ -164,6 +170,10 @@ shinyServer(function(input, output,session) {
     colnames(consults) <- c("entered_by","service","date","location",
                             "department", "num_consult","category",
                             "time_spent","status")
+    #check that there are nonzero number of rows
+    if(nrow(consults) == 0){
+      return(NULL)
+    }
     #ensure date class
     consults$date <- mdy(consults$date)
     #make num_consult numeric
@@ -192,10 +202,6 @@ shinyServer(function(input, output,session) {
     consults <- consults %>% relocate(fuzzy_department, .after = department)
     #filter to selected quarter
     consults <- filter_Sortie(df = consults, qtr = input$quarter, yr = input$year)
-    #check that there are nonzero number of rows
-    if(nrow(consults) == 0){
-      return(NULL)
-    }
     #generate counts for each department
     consults <- consults %>% group_by(department) %>%
       mutate(dept_consult_count = n())
@@ -209,8 +215,10 @@ shinyServer(function(input, output,session) {
       return(NULL)
     }
     #now clean for info/RAD data
-    info <- user_data[user_data$Q2 %in% c("RAD","Info Desk"),
-                      c("RecordedDate","Q2","Q26","Q27","Q31")]
+    info <- user_data[user_data$Q2 %in% c("RAD","Info Desk"),c("RecordedDate","Q2","Q26","Q27","Q31")]
+    if(nrow(info) == 0){ #check needed here as well as at the end
+      return(NULL)
+    }
     #merge columns 27 and 31 into new column
     info$pasted <- paste(info$Q27,info$Q31, sep = "")
     #date time conversion
@@ -232,10 +240,6 @@ shinyServer(function(input, output,session) {
     info <- filter_Sortie(df = info, qtr = input$quarter, yr = input$year)
     #clean services
     info$service <- clean_desk_service(info$service)
-    #check that there are nonzero number of rows
-    if(nrow(info) == 0){
-      return(NULL)
-    }
     return(info)
   })
   
@@ -251,7 +255,10 @@ shinyServer(function(input, output,session) {
     gis_lab <- user_data[user_data$Q2 == "Data/GIS Lab",]
     gis_lab <- gis_lab %>% select(c("RecordedDate","Q2","Q49","Q50","Q51",
                                     "Q52","Q53",'Q89','Q90'))
-    
+    #check that there are nonzero number of rows
+    if(nrow(gis_lab) == 0){
+      return(NULL)
+    }
     #colnames
     colnames(gis_lab) <- c("RecordedDate","location","entry_type","user_status",
                            "department","visit_purpose","question_type",
@@ -281,10 +288,6 @@ shinyServer(function(input, output,session) {
     gis_lab <- gis_lab %>% relocate(fuzzy_department, .after = department)
     #filter to selected quarter
     gis_lab <- filter_Sortie(df = gis_lab, qtr = input$quarter, yr = input$year)
-    #check that there are nonzero number of rows
-    if(nrow(gis_lab) == 0){
-      return(NULL)
-    }
     return(gis_lab)
   })
   
@@ -462,8 +465,8 @@ shinyServer(function(input, output,session) {
       #plot
       fig <- ggplotly(
         dept_counts %>%
-          ggplot(aes(x = reorder(fuzzy_department,n), y = n, fill = n)) +
-          geom_col(alpha = 1) +
+          ggplot(aes(x = reorder(fuzzy_department,n), y = n)) +
+          geom_col(alpha = 1, fill = "#00629B") +
           #geom_text(aes(label = n), hjust = -1) +
           coord_flip() +
           ggtitle("Most Consulted Departments") +
@@ -491,8 +494,8 @@ shinyServer(function(input, output,session) {
       #plot
       fig1 <- ggplotly(
         dept_counts %>%
-          ggplot(aes(x = reorder(department,n), y = n, fill = n)) +
-          geom_col(alpha = 1,) +
+          ggplot(aes(x = reorder(department,n), y = n)) +
+          geom_col(alpha = 1, fill = "#00629B") +
           #geom_text(aes(label = n), hjust = -1) +
           coord_flip() +
           ggtitle("Most Consulted Departments") +
@@ -673,8 +676,8 @@ shinyServer(function(input, output,session) {
     # plot as col plot
     fig <- ggplotly(
       categories %>%
-      ggplot(aes(x = reorder(category,n), y = n, fill = n)) +
-      geom_col() +
+      ggplot(aes(x = reorder(category,n), y = n)) +
+      geom_col(fill = "#00629B") +
       coord_flip() +
       ggtitle("Consult Categories") +
         my_ggtheme + #custom theme

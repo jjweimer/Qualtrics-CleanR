@@ -1,12 +1,14 @@
 library(shiny)
 library(lubridate)
 library(dplyr)
-library(plotly)
 library(ggplot2)
+library(plotly)
 library(DT) #for better tables
+library(stringdist) #fuzzy matching
 library(rintrojs) #js library for intro
 library(shinycssloaders)
 library(bslib)
+#library(thematic)
 
 #max file size 30mb for upload
 options(shiny.maxRequestSize = 30*1024^2)
@@ -81,8 +83,7 @@ shinyUI(fixedPage(
                       "Spring" = "SP",
                       "Summer" = "SU",
                       "Fall" = "FA",
-                      "Break" = "Break")
-        ),
+                      "Break" = "Break")),
         #introbox args
         data.step = 3,
         data.intro = "Use these dropdowns to filter data by quarter or year."
@@ -96,8 +97,7 @@ shinyUI(fixedPage(
                     "2021" = "2021",
                     "2020" = "2020",
                     "2019" = "2019",
-                    "2018" = "2018")
-      ),
+                    "2018" = "2018"))
     ),
     column(
       4,
@@ -133,29 +133,56 @@ shinyUI(fixedPage(
                                tags$hr()
                              )
                            ),
-                           plotlyOutput("intra_quarter_consults") %>% withSpinner(),
-                           selectInput("consults_position", "Position:",
-                                       c("Stacked" = "stack",
-                                         "Dodged" = "dodge")
+                           fluidRow(
+                             column(
+                               10,
+                               plotlyOutput("intra_quarter_consults") %>% withSpinner()
+                             ),
+                             column(
+                               2,
+                               selectInput("consults_position", "Position:",
+                                           c("Stacked" = "stack",
+                                             "Dodged" = "dodge")),
+                             )
                            ),
                            tags$hr(),
-                           plotlyOutput("consults_over_time") %>% withSpinner(),
-                           selectInput("consults_scale", "Aggregation Scale:",
-                                       c("Weekly" = "Weekly",
-                                         "Daily" = "Daily")
+                           fluidRow(
+                             column(
+                               10,
+                               plotlyOutput("consults_over_time") %>% withSpinner()
+                             ),
+                             column(
+                               2,
+                               selectInput("consults_scale", "Aggregation Scale:",
+                                           c("Weekly" = "Weekly",
+                                             "Daily" = "Daily")),
+                             )
                            ),
                            tags$hr(),
-                           plotlyOutput("consults_graph") %>% withSpinner(),
-                           numericInput("n","Top n Departments:"
-                                        ,10,min = 1),
-                           selectInput("is_fuzzy", "Select Matched or Raw Departments:", 
-                                       c("Matched" = "Matched",
-                                         "Raw" = "Raw")
+                           fluidRow(
+                             column(
+                               10,
+                               plotlyOutput("consults_graph") %>% withSpinner()
+                             ),
+                             column(
+                               2,
+                               numericInput("n","Top n Departments:",10,min = 1),
+                               selectInput("is_fuzzy", "Departments:", 
+                                           c("Matched" = "Matched",
+                                             "Raw" = "Raw")),
+                             )
                            ),
                            tags$hr(),
-                           plotlyOutput("consult_categories") %>% withSpinner(),
-                           numericInput("n_category","Top n Categories:"
-                                        ,10,min = 1),
+                           fluidRow(
+                             column(
+                               10,
+                               plotlyOutput("consult_categories") %>% withSpinner()
+                             ),
+                             column(
+                               2,
+                               numericInput("n_category","Top n Categories:",10,min = 1)
+                             )
+                           ),
                            tags$hr(),
                            DT::dataTableOutput("consults_DT") %>% withSpinner()
                   ),
@@ -180,31 +207,51 @@ shinyUI(fixedPage(
                                tags$hr()
                              )
                            ),
-                           plotlyOutput("intra_quarter_instruction") %>% withSpinner(),
-                           selectInput("instruction_position", "Position:",
-                                       c("Stacked" = "stack",
-                                         "Dodged" = "dodge")
+                           fluidRow(
+                             column(
+                               10,
+                               plotlyOutput("intra_quarter_instruction") %>% withSpinner()
+                               ),
+                             column(
+                               2,
+                               selectInput("instruction_position", "Position:",
+                                           c("Stacked" = "stack",
+                                             "Dodged" = "dodge"))
+                             )
                            ),
                            tags$hr(),
-                           plotlyOutput("instruction_time_plot") %>% withSpinner(),
-                           selectInput("instruction_scale", "Aggregation Scale:", 
-                                       c("Weekly" = "Weekly",
-                                         "Daily" = "Daily")
-                           ),
-                           selectInput("instruction_format_selector_2", "Format:",
-                                       c("All Formats" = "All",
-                                         "Online" = "Online only",
-                                         "In Person" = "In-person only",
-                                         "Hybrid" = "Hybrid (partially online, partially in-person)")
+                           fluidRow(
+                             column(
+                               10,
+                               plotlyOutput("instruction_time_plot") %>% withSpinner()
+                             ),
+                             column(
+                               2,
+                               selectInput("instruction_scale", "Aggregation Scale:", 
+                                           c("Weekly" = "Weekly",
+                                             "Daily" = "Daily")),
+                               selectInput("instruction_format_selector_2", "Format:",
+                                           c("All Formats" = "All",
+                                             "Online" = "Online only",
+                                             "In Person" = "In-person only",
+                                             "Hybrid" = "Hybrid (partially online, partially in-person)")),
+                             )
                            ),
                            tags$hr(),
-                           plotlyOutput("instruction_num_people_time") %>% withSpinner(),
-                           selectInput("instruction_format_selector", "Format:",
-                                       c("All Formats" = "All",
-                                         "Online" = "Online only",
-                                         "In Person" = "In-person only",
-                                         "Hybrid" = "Hybrid (partially online, partially in-person)")
-                           ),
+                           fluidRow(
+                             column(
+                               10,
+                               plotlyOutput("instruction_num_people_time") %>% withSpinner()
+                             ),
+                             column(
+                               2,
+                               selectInput("instruction_format_selector", "Format:",
+                                           c("All Formats" = "All",
+                                             "Online" = "Online only",
+                                             "In Person" = "In-person only",
+                                             "Hybrid" = "Hybrid (partially online, partially in-person)")),
+                             )
+                           ), 
                            tags$hr(),
                            DT::dataTableOutput("instruction_DT") %>% withSpinner()
                   ),
@@ -252,15 +299,31 @@ shinyUI(fixedPage(
                                tags$hr()
                              )
                            ),
-                           plotlyOutput("intra_quarter_RAD") %>% withSpinner(),
-                           selectInput("info_position", "Position:",
-                                       c("Stacked" = "stack",
-                                         "Dodged" = "dodge")),
+                           fluidRow(
+                             column(
+                               10,
+                               plotlyOutput("intra_quarter_RAD") %>% withSpinner()
+                             ),
+                             column(
+                               2,
+                               selectInput("info_position", "Position:",
+                                           c("Stacked" = "stack",
+                                             "Dodged" = "dodge")) 
+                             )
+                           ),
                            tags$hr(),
-                           plotlyOutput("info_time_plot") %>% withSpinner(),
-                           selectInput("info_scale", "Aggregation Scale:", 
-                                       c("Weekly" = "Weekly",
-                                         "Daily" = "Daily")),
+                           fluidRow(
+                             column(
+                               10,
+                               plotlyOutput("info_time_plot") %>% withSpinner(),
+                             ),
+                             column(
+                               2,
+                               selectInput("info_scale", "Aggregation Scale:", 
+                                           c("Weekly" = "Weekly",
+                                             "Daily" = "Daily"))
+                             )
+                           ),
                            tags$hr(),
                            h3("Service Type Counts"),
                            DT::dataTableOutput("serv_counts_DT") %>% withSpinner(),

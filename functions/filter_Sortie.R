@@ -7,5 +7,9 @@ filter_Sortie <- function(df, qtr, yr){
     yr <- as.numeric(yr)
     df <- df %>% filter(year == yr)
   }
-  return(df)
+  if(nrow(df) == 0){
+    return(NULL)
+  } else {
+    return(df)
+  }
 }
