@@ -68,7 +68,7 @@ shinyServer(function(input, output,session) {
                                         Q14, Q15, Q21, Q197_1, Q197_2)
     instruction <- instruction[instruction$Q3 == "Instruction",]
     colnames(instruction) <- c("entered_by","service","date","format",
-                               "program", "co_instructor", "activity",
+                               "activity", "home_program", "co_instructors",
                                "num_attendants","sessions_in_person",
                                "sessions_online")
     
