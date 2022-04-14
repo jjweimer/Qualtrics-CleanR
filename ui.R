@@ -184,6 +184,8 @@ shinyUI(fixedPage(
                              )
                            ),
                            tags$hr(),
+                           plotlyOutput("consult_comm_category") %>% withSpinner(),
+                           tags$hr(),
                            DT::dataTableOutput("consults_DT") %>% withSpinner()
                   ),
                   tabPanel("Instruction",
@@ -251,7 +253,7 @@ shinyUI(fixedPage(
                                              "In Person" = "In-person only",
                                              "Hybrid" = "Hybrid (partially online, partially in-person)")),
                              )
-                           ), 
+                           ),
                            tags$hr(),
                            DT::dataTableOutput("instruction_DT") %>% withSpinner()
                   ),

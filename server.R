@@ -17,6 +17,7 @@ source("functions/filter_Sortie.R")
 source("functions/dataprep_gis_lab_hourly.R")
 source("functions/dataprep_gis_lab_departments.R")
 source("functions/clean_desk_service.R")
+source("functions/count_comm_act.R")
 source("ggtheme/my_ggtheme.R")
 
 #max file size 30mb for upload
@@ -165,11 +166,11 @@ shinyServer(function(input, output,session) {
       return(NULL)
     
     #now clean data for consults_data
-    consults <- user_data %>% select(Q2,Q3,Q38,Q39,Q40,Q42,Q43,Q44,Q45)
+    consults <- user_data %>% select(Q2,Q3,Q38,Q39,Q40,Q42,Q43,Q44,Q45,Q92)
     consults <- consults[consults$Q3 == 'Consultation',]
     colnames(consults) <- c("entered_by","service","date","location",
                             "department", "num_consult","category",
-                            "time_spent","status")
+                            "time_spent","status","comm")
     #check that there are nonzero number of rows
     if(nrow(consults) == 0){
       return(NULL)
@@ -851,6 +852,30 @@ shinyServer(function(input, output,session) {
                                         "select2d"))
     return(fig)
     
+  })
+  
+  #consult communication category
+  output$consult_comm_category <- renderPlotly({
+    if(is.null(Sortie_master())){
+      return(NULL)
+    } else {
+      df <- Sortie_master() #for some reason using master works but consults doesn't ?? not sure why
+      df <- count_comm_act(df$Q92)
+      #plot
+      fig <- df %>%
+        ggplot(aes(x = n, y = reorder(comm_act,n))) +
+        geom_col( fill = "#00629B") +
+        my_ggtheme +
+        labs(y = "Communication Activity", x = "n") +
+        ggtitle("Communication Activity Counts") 
+      fig <- ggplotly(fig, tooltip = "n") %>%
+        config(displayModeBar = FALSE) %>%
+        layout(xaxis=list(fixedrange=TRUE)) %>%
+        layout(yaxis=list(fixedrange=TRUE)) %>% 
+        config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
+                                          "lasso2d","pan2d","autoscale2d","select2d"))
+      return(fig)  
+    }
   })
   
   #info / RAD week of quarter
