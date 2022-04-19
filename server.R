@@ -20,8 +20,8 @@ source("functions/clean_desk_service.R")
 source("functions/count_comm_act.R")
 source("ggtheme/my_ggtheme.R")
 
-#max file size 30mb for upload
-options(shiny.maxRequestSize = 30*1024^2)
+#max file size 100mb for upload
+options(shiny.maxRequestSize = 100*1024^2)
 
 # Define server logic 
 shinyServer(function(input, output,session) {
@@ -1096,8 +1096,8 @@ shinyServer(function(input, output,session) {
     #plot
     fig <- ggplotly(
       hourly %>%
-        ggplot(aes(x = hour, y = n, fill = hour)) +
-        geom_bar(stat = 'identity') +
+        ggplot(aes(x = hour, y = n)) +
+        geom_bar(stat = 'identity', fill = "#00629B") +
         my_ggtheme + #custom theme
         ggtitle("Hourly Lab Traffic") +
         labs(y = "Visitors", x = NULL) +

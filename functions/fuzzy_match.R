@@ -3,7 +3,8 @@ fuzzy_match <- function(typo_list){
   #outputs column vector of matched names
   #crosswalks dept codes to dept names
   
-  #define names to match to
+  # --------------- define names to match to --------------------------------
+  
   department_names <- c( 
     #UCSD departments
     "Academic Internship Program",
@@ -13,7 +14,7 @@ fuzzy_match <- function(typo_list){
     "Art History",
     "Bioengineering",
     "Biological Sciences",
-    "Biology",
+    "Biology", "Marine Biology", "Human Biology",
     "Biochemistry",
     "CAT (Sixth College)",
     "Chemistry",
@@ -34,6 +35,7 @@ fuzzy_match <- function(typo_list){
     "Ethnic Studies",
     'Extension',
     "First Year Experience",
+    "Film Studies",
     "Geosciences",
     "General",
     "German Studies",
@@ -102,6 +104,8 @@ fuzzy_match <- function(typo_list){
     "FPMU",
     "GPS",
     "HDP",
+    "HDS",
+    "HDSI",
     "HIST",
     "HMNR",
     "HUM",
@@ -207,6 +211,9 @@ fuzzy_match <- function(typo_list){
     "Visiting Scholar"
   )
   
+  
+  ## ------------------------ FUZYY MATCHING  -------------------
+  
   indices <- stringdist::amatch(x = typo_list, #things we want matched 
                     table = department_names, #table of correct names
                     method = "jw", #jaro winkler methodology
@@ -215,29 +222,90 @@ fuzzy_match <- function(typo_list){
                     )
   ## assign to new obj
   matched_departments <- department_names[indices]
+  
+  # ----------------- CROSSSWALK ------------------------------------
+  
   #crosswalk dept codes to dept names
-  codes <- c("ANTH","BENG","BIOL",
-             "CHEM","COGS","COMM","CSE","CENG",
-             "DOC","DSC","ECE","ECON",
-             "GPS","HDS","HDSI",
-             "HIST","MATH","Music Department",
-             "MAE","NANO","NENG", #NANO and NENG are both nanoengineering
-             "SIO","USP","VIS","POLI")
-  names <- c("Anthropology","Bioengineering","Biology",
-            "Chemistry","Cognitive Science","Communication", "Computer Science", "Chemical Engineering",
-            "DOC Writing Program","Data Science","Electrical & Computer Engineering","Economics",
-            "Global Policy and Strategy","Human Development Sciences","Data Science",
-            "History","Mathematics","Music",
-            "Mechanical & Aerospace Engineering","Nanoengineering","Nanoengineering", #NANO and NENG are both nanoengineering
-            "Scripps Institute of Oceanography","Urban Studies and Planning", "Visual Arts","Political Science")
+  crosswalk_list <- list(
+    "ANTH" = "Anthropology",
+    "BENG" = "Bioengineering",
+    "BIOL" = "Biology",
+    "CAT" = "Culture, Art, & Technology",
+    "CENG" = "Chemical Engineering",
+    "CGS" = "Critical Gender Studies",
+    "CHEM" = "Chemistry",
+    "CHIN" = "Chinese Studies",
+    "COGS" = "Cognitive Science",
+    "COMM" = "Communication",
+    "CONT" = "Contemporary Issues",
+    "CSE" = "Computer Science",
+    "DOC" = "DOC Writing Program",
+    "DSC" = "Data Science",
+    "ECE" = "Electrical & Computer Engineering",
+    "ECON" = "Economics",
+    "EDS" = "Education Studies",
+    "ENVR" = "Environmental Systems",
+    "ERC" = "Eleanor Roosevelt College",
+    "ESYS" = "Environmental Systems",
+    "ETHN" = "Ethnic Studies",
+    "FILM" = "Film Studies",
+    "GPS" = "Global Policy and Strategy",
+    "HDP" = "Human Development Sciences",
+    "HIST" = "History",
+    "HDS" = "Human Development Sciences",
+    "HDSI" = "Data Science",
+    "HMNR" = "Human Rights and Migration",
+    "HUM" = "Humanities",
+    "ICAM" = "Visual Arts",
+    "INTL" = "international Studies",
+    "JAPN" = "Japanese Studies",
+    "JUDA" = "Jewish Studies",
+    "LATI" = "Latin American Studies",
+    "LAWS" = "Law and Society",
+    "LING" = "Linguistics",
+    "LIT" = "Literature",
+    "MAE" = "Mechanical & Aerospace Engineering",
+    "MATH" = "Mathematics",
+    "MMW" = "MMW",
+    "MUIR" = "Muir College",
+    "MCWP" = "Muir College Writing Program",
+    "MUS" = "Music",
+    "Music Department" = "Music",
+    "MGMT" = "Rady School of Management",
+    "NANO" = "Nanoengineering",
+    "NENG" = "Nanoengineering", #NANO and NENG are both nanoengineering
+    "POLI" = "Political Science",
+    "PHIL" = "Philosophy",
+    "PHYS" = "Physics",
+    "PSYC" = "Psychology",
+    "RELI" = "Religion",
+    "REV" = "Revelle College",
+    "RSM" = "Rady School of Management",
+    "SE" = "Structural Engineering",
+    "SIO" = "Scripps Institute of Oceanography",
+    "SOC" = "Sociology",
+    "SOE" = "School of Engineering",
+    "STPA" = "Science, Technology, and Public Affairs",
+    "SXTH" = "Sixth College",
+    "THEA" = "Theatre and Dance",
+    "TMC" = "Marshall College",
+    "TWS" = "Third World Studies",
+    "USP" = "Urban Studies and Planning",
+    "VIS" = "Visual Arts",
+    "WARR" = "Warren College",
+    "WCWP" = "Warren College Writing Program"
+  )
   
   #loop through both lists and crosswalk
-  for(i in 1:length(codes)){
-    matched_departments[matched_departments == codes[i]] <- names[i]
+  for(i in names(crosswalk_list)){
+    matched_departments[matched_departments == i] <- crosswalk_list[[i]]
   }
   #abbreviations to their full names
   matched_departments[matched_departments == "NOAA - SWFSC"] <- "NOAA - Southwest Fisheries Science Center"
   matched_departments[matched_departments == "SDSC"] <- "San Diego Supercomputer Center"
   matched_departments[matched_departments == "Extension"] <- "UCSD Extension"
+  
+  # --------------------- RETURN MATCHED DEPARTMENTS ------------------------
+  
   return(matched_departments)
 }

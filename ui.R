@@ -10,8 +10,8 @@ library(shinycssloaders)
 library(bslib)
 #library(thematic)
 
-#max file size 30mb for upload
-options(shiny.maxRequestSize = 30*1024^2)
+#max file size 100mb for upload
+options(shiny.maxRequestSize = 100*1024^2)
 #spinner options from shinycssloaders
 options(spinner.type = 3,
         spinner.color.background  = "#ffffff",
@@ -75,7 +75,7 @@ shinyUI(fixedPage(
   fluidRow(
     column(
       2,
-      offset = 3,
+      offset = 2,
       introBox(
         selectInput("quarter", "Quarter:", #this is our selector
                     c("All" = "All",
@@ -85,7 +85,7 @@ shinyUI(fixedPage(
                       "Fall" = "FA",
                       "Break" = "Break")),
         #introbox args
-        data.step = 3,
+        data.step = 4,
         data.intro = "Use these dropdowns to filter data by quarter or year."
       )
     ),
@@ -100,11 +100,28 @@ shinyUI(fixedPage(
                     "2018" = "2018"))
     ),
     column(
-      4,
+      2,
       style = "margin-top: 30px;",
-      actionButton("help","Press here for Tutorial")
+      actionButton("help","Tutorial", style = "width : 100%;" )
+    ),
+    column(
+      3,
+      style = "margin-top: 30px;",
+      introBox(
+        #link to export guide
+        tags$a(
+          href = "https://ucsdlibrary.atlassian.net/wiki/download/attachments/60369935/Directions_%20Exporting%20Individual%20Data%20-%20Google%20Docs.pdf?version=1&modificationDate=1536593179271&cacheVersion=1&api=v2",
+          class = "btn btn-default",
+          "Qualtrics Export Guide"
+        ),
+        data.step = 3,
+        data.intro = "If you are unsure of how to access Service Statistics Data or
+        export from Qualtrics, click this button for a walkthrough."
+      )
     )
   ),
+  
+  
   tags$hr(),
   
   #tabset panels
