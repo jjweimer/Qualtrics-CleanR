@@ -10,17 +10,17 @@ library(shinycssloaders)
 library(bslib)
 #library(thematic)
 
-#max file size 100mb for upload
-options(shiny.maxRequestSize = 100*1024^2)
-#spinner options from shinycssloaders
-options(spinner.type = 3,
+# ----- DEFINE OPTIONS ---------------------------------------
+
+#spinner options from shinycssloaders and 100mb upload limit
+options(shiny.maxRequestSize = 100*1024^2,
+        spinner.type = 3,
         spinner.color.background  = "#ffffff",
         spinner.color = "#00629B")
+#----------------------------------------------------------
 
 #UI
-shinyUI(fixedPage(
-  introjsUI(),
-  
+shinyUI(fixedPage(introjsUI(),
   #load custom css from file
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "css/style.css")

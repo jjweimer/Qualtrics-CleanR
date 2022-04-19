@@ -20,17 +20,8 @@ source("functions/clean_desk_service.R")
 source("functions/count_comm_act.R")
 source("ggtheme/my_ggtheme.R")
 
-#max file size 100mb for upload
-options(shiny.maxRequestSize = 100*1024^2)
-
 # Define server logic 
 shinyServer(function(input, output,session) {
-  
-  #-------------- THEMING ---------------------------------------
-  
-  #easily blend theme with plots
-  #thematic::thematic_shiny()
-  
   
   #----- TUTORIAL ----------------------------------------------------
   
