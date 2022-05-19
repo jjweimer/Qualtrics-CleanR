@@ -56,9 +56,9 @@ shinyServer(function(input, output,session) {
       return(NULL)
     
     #now clean data for instruction_data
-    instruction <- user_data %>% select(Q2, Q3, Q16, Q192.1, Q17, 
-                                        Q14, Q15, Q21, Q197_1, Q197_2)
-    instruction <- instruction[instruction$Q3 == "Instruction",]
+    instruction <- user_data %>% 
+      select(Q2, Q3, Q16, Q192.1, Q17, Q14, Q15, Q21, Q197_1, Q197_2) %>%
+      filter(Q3 == "Instruction")
     colnames(instruction) <- c("entered_by","service","date","format",
                                "activity", "home_program", "co_instructors",
                                "num_attendants","sessions_in_person",
@@ -75,16 +75,16 @@ shinyServer(function(input, output,session) {
     #week and quarter
     instruction$week <- isoweek(instruction$date)
     instruction <- instruction %>% relocate(week, .after = date)
+    #month
+    instruction$month <- month(instruction$date)
     #get year
     instruction$year <- format(instruction$date,format =  '%Y')
-    #clean years
-    instruction <- clean_years(instruction)
-    #week to quarter
-    instruction <- week_to_quarter(instruction)
-    #week of quarter
-    instruction <- week_of_quarter(instruction)
-    #month-day
-    instruction <- month_day(instruction)
+    #date stuff 
+    instruction <- instruction %>%
+      clean_years() %>%
+      week_to_quarter() %>%
+      week_of_quarter() %>%
+      month_day()
     #total sessions
     instruction$sessions_in_person <- as.numeric(instruction$sessions_in_person)
     instruction$sessions_online <- as.numeric(instruction$sessions_online)
@@ -107,10 +107,10 @@ shinyServer(function(input, output,session) {
       return(NULL)
     
     #now clean data for outreach_data
-    outreach <- user_data %>% select(Q2,Q3, Q156, Q198, Q174, Q182, Q170 ,Q184,
-                                     Q194, Q202, Q196,Q178, Q178_5_TEXT, Q180, 
-                                     Q180_5_TEXT, Q168)
-    outreach <- outreach[outreach$Q3 == "Outreach",]
+    outreach <- user_data %>% 
+      select(Q2,Q3, Q156, Q198, Q174, Q182, Q170 ,Q184,Q194, Q202, 
+             Q196,Q178, Q178_5_TEXT, Q180, Q180_5_TEXT, Q168) %>%
+      filter(Q3 == "Outreach")
     colnames(outreach) <- c("entered_by","service","date","type","home_program",
                             "topic","collaborators","attendees","status",
                             "duration","time_prep","outcome1","outcome2",
@@ -119,9 +119,10 @@ shinyServer(function(input, output,session) {
     if(nrow(outreach) == 0){
       return(NULL)
     }
-    #drop empty obs
-    outreach <- outreach[!is.na(outreach$date),]
-    outreach <- outreach[!outreach$date == "",]
+    #drop empty obs 
+    outreach <- outreach %>%
+      filter(!is.na(date)) %>%
+      filter(date != "")
     #ensure date data type
     outreach$date <- mdy(outreach$date)
     #make attendees numeric
@@ -131,18 +132,13 @@ shinyServer(function(input, output,session) {
     outreach <- outreach %>% relocate(week, .after = date)
     #get year
     outreach$year <- format(outreach$date,format =  '%Y')
-    #clean years
-    outreach <- clean_years(outreach)
-    #week to quarter
-    outreach <- week_to_quarter(outreach)
-    #week of quarter
-    outreach <- week_of_quarter(outreach)
-    #month-day
-    outreach <- month_day(outreach)
-    #for some reason without this, it returns a ton of missing values as rows
-    #this should do nothing but is like integral somehow
-    outreach <- outreach[outreach$quarter %in% c("WI","SP","SU","FA", "Break"),]
-    #filter to selected quarter
+    #dates and stuff
+    outreach <- outreach %>%
+      clean_years() %>%
+      week_to_quarter() %>%
+      week_of_quarter() %>%
+      month_day()
+  
     outreach <- filter_Sortie(df = outreach, qtr = input$quarter, yr = input$year)
     return(outreach)
   })
@@ -157,8 +153,9 @@ shinyServer(function(input, output,session) {
       return(NULL)
     
     #now clean data for consults_data
-    consults <- user_data %>% select(Q2,Q3,Q38,Q39,Q40,Q42,Q43,Q44,Q45,Q92)
-    consults <- consults[consults$Q3 == 'Consultation',]
+    consults <- user_data %>% 
+      select(Q2,Q3,Q38,Q39,Q40,Q42,Q43,Q44,Q45,Q92) %>%
+      filter(Q3 == "Consultation")
     colnames(consults) <- c("entered_by","service","date","location",
                             "department", "num_consult","category",
                             "time_spent","status","comm")
@@ -179,16 +176,16 @@ shinyServer(function(input, output,session) {
     #add week of year,quarters(works for 2021 and 2020, need to check for other)
     consults$week <- isoweek(consults$date)
     consults <- consults %>% relocate(week, .before = location)
+    #month
+    consults$month <- month(consults$date)
     #get year
     consults$year <- format(consults$date,format =  '%Y')
-    #clean years
-    consults <- clean_years(consults)
-    #week to quarter
-    consults <- week_to_quarter(consults)
-    #week of quarter
-    consults <- week_of_quarter(consults)
-    #month-day
-    consults <- month_day(consults)
+    #date stuff
+    consults <- consults %>%
+      clean_years() %>%
+      week_to_quarter() %>%
+      week_of_quarter() %>%
+      month_day()
     ## fuzzy match department names
     consults$fuzzy_department <- fuzzy_match(consults$department)
     consults <- consults %>% relocate(fuzzy_department, .after = department)
@@ -207,27 +204,31 @@ shinyServer(function(input, output,session) {
       return(NULL)
     }
     #now clean for info/RAD data
-    info <- user_data[user_data$Q2 %in% c("RAD","Info Desk"),c("RecordedDate","Q2","Q26","Q27","Q31")]
+    info <- user_data %>%
+      select(RecordedDate,Q2,Q26,Q27,Q31) %>%
+      filter(Q2 %in% c("RAD","Info Desk"))
+      
     if(nrow(info) == 0){ #check needed here as well as at the end
       return(NULL)
     }
     #merge columns 27 and 31 into new column
     info$pasted <- paste(info$Q27,info$Q31, sep = "")
     #date time conversion
-    info$date_time <- as.POSIXct(info$RecordedDate, 
-                             format = "%m/%d/%Y %H:%M", 
-                             tz = "America/Los_Angeles")
+    info$date_time <- 
+      as.POSIXct(info$RecordedDate, format = "%m/%d/%Y %H:%M", tz = "America/Los_Angeles")
     #extract year and week
     info$year <-  format(info$date_time,format =  '%Y')
     info$week <- isoweek(info$date_time)
     #select down to the rows we want, and rename cols
     info <- info %>% select(c("year","week","date_time","Q2","pasted"))
     colnames(info) <- c("year","week","date_time","desk","service")
-    #week of quarter and quarter
-    info <- week_to_quarter(info)
-    info <- week_of_quarter(info)
-    #month_day
-    info <- month_day(info)
+    #dates stuff
+    info <- info %>%
+      week_to_quarter() %>%
+      week_of_quarter() %>%
+      month_day()
+    #month
+    info$month <- month(info$date)
     #filter to selected quarter
     info <- filter_Sortie(df = info, qtr = input$quarter, yr = input$year)
     #clean services
@@ -244,37 +245,35 @@ shinyServer(function(input, output,session) {
       return(NULL)
     
     #select the columns/rows we need
-    gis_lab <- user_data[user_data$Q2 == "Data/GIS Lab",]
-    gis_lab <- gis_lab %>% select(c("RecordedDate","Q2","Q49","Q50","Q51",
-                                    "Q52","Q53",'Q89','Q90'))
+    gis_lab <- user_data %>%
+      select(RecordedDate,Q2,Q49,Q50,Q51,Q52,Q53,Q89,Q90) %>%
+      filter(Q2 == "Data/GIS Lab")
     #check that there are nonzero number of rows
     if(nrow(gis_lab) == 0){
       return(NULL)
     }
     #colnames
-    colnames(gis_lab) <- c("RecordedDate","location","entry_type","user_status",
-                           "department","visit_purpose","question_type",
-                           "date","hour")
-    
+    colnames(gis_lab) <- 
+      c("RecordedDate","location","entry_type","user_status","department",
+        "visit_purpose","question_type","date","hour")
     #convert RecordedDate to useful date-times
-    #date time conversion
-    gis_lab$date_time <- as.POSIXct(gis_lab$RecordedDate, 
-                                 format = "%m/%d/%Y %H:%M", 
-                                 tz = "America/Los_Angeles")
+    gis_lab$date_time <- 
+      as.POSIXct(gis_lab$RecordedDate,format = "%m/%d/%Y %H:%M",tz = "America/Los_Angeles")
     
     #fill in missing "date" values with recordeddate
-    gis_lab$date[is.na(gis_lab$date) | gis_lab$date == ""] <- format(gis_lab$date_time[is.na(gis_lab$date) | gis_lab$date == ""], 
-                                                                     format = "%m/%d/%Y")
+    gis_lab$date[is.na(gis_lab$date) | gis_lab$date == ""] <- 
+      format(gis_lab$date_time[is.na(gis_lab$date) | gis_lab$date == ""], format = "%m/%d/%Y")
     #convert to date class
     gis_lab$date <- mdy(gis_lab$date)
     #extract year and week
     gis_lab$year <-  format(gis_lab$date,format =  '%Y')
     gis_lab$week <- isoweek(gis_lab$date)
-    #week of quarter and quarter
-    gis_lab <- week_to_quarter(gis_lab)
-    gis_lab <- week_of_quarter(gis_lab)
-    #month_day
-    gis_lab <- month_day(gis_lab)
+    #more date stuff
+    gis_lab <- gis_lab %>%
+      week_to_quarter() %>%
+      week_of_quarter() %>%
+      month_day()
+  
     ## fuzzy match department names
     gis_lab$fuzzy_department <- fuzzy_match(gis_lab$department)
     gis_lab <- gis_lab %>% relocate(fuzzy_department, .after = department)
@@ -527,8 +526,7 @@ shinyServer(function(input, output,session) {
           ggtitle("Weekly Consults") +
           labs(x = NULL, y = "Number of Consults") +
           my_ggtheme + #custom theme
-          scale_x_continuous(breaks = month_numeric, 
-                             labels = month_label)
+          scale_x_continuous(breaks = month_numeric, labels = month_label)
       ) %>%
         config(displaylogo = FALSE) %>%
         config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
@@ -537,22 +535,21 @@ shinyServer(function(input, output,session) {
       
       return(fig1)
       
-    }else if(user_consults_scale == "Daily"){
+    }else if(user_consults_scale == "Monthly"){
       
-      #aggregate daily
-      daily_data <- consults %>% group_by(month_day, year) %>% count(month_day)
+      #aggregate 
+      monthly_data <- consults %>% group_by(month, year) %>% count(month)
       #make sure each date occurs at least once so axes work well
-      daily_data <- all_daily_dates(daily_data)
+      #monthly_data <- all_daily_dates(daily_data)
       #plot
       fig2 <- ggplotly(
-        daily_data[!is.na(daily_data$year),] %>% 
-          ggplot(aes(x = month_day, y = n, fill = year)) +
+        monthly_data[!is.na(monthly_data$year),] %>% 
+          ggplot(aes(x = month, y = n, fill = year)) +
           geom_bar(stat= 'identity') +
           my_ggtheme +
           labs(x = NULL, y = "Number of Consults") +
-          ggtitle("Daily Consults") +
-          scale_x_discrete(breaks = month_2, 
-                           labels = month_label)
+          ggtitle("Monthly Consults") +
+          scale_x_continuous(breaks = c(1:12), labels = month_label)
       ) %>%
         config(displaylogo = FALSE) %>%
         config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
@@ -593,7 +590,7 @@ shinyServer(function(input, output,session) {
         xlim(0,11) +
         labs(y = "Number of Consults", x = "Week") +
         my_ggtheme + #custom theme
-        scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8,9,10,11))
+        scale_x_continuous(breaks = c(0:11))
     ) %>%
       config(displayModeBar = FALSE) %>%
       layout(xaxis=list(fixedrange=TRUE)) %>%
@@ -714,7 +711,7 @@ shinyServer(function(input, output,session) {
         xlim(1,10) +
         labs(y = "Number of Instruction Events", x = "Week") +
         my_ggtheme + #custom theme
-        scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8,9,10,11))
+        scale_x_continuous(breaks = c(0:11))
     ) %>%
       config(displaylogo = FALSE) %>%
       config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
@@ -759,8 +756,7 @@ shinyServer(function(input, output,session) {
           ggtitle("Weekly Instruction Events") +
           labs(x = NULL, y = "Number of Instruction Events") +
           my_ggtheme + #custom theme
-          scale_x_continuous(breaks = month_numeric, 
-                             labels = month_label)
+          scale_x_continuous(breaks = month_numeric, labels = month_label)
       ) %>%
         config(displaylogo = FALSE) %>%
         config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
@@ -770,25 +766,25 @@ shinyServer(function(input, output,session) {
       
       return(fig1)
       
-    } else if(user_instruction_scale == "Daily"){
+    } else if(user_instruction_scale == "Monthly"){
       
-      #aggregate daily
-      daily_data <- instruction %>% group_by(month_day, year) %>%
-        count(month_day)
+      #aggregate
+      monthly_data <- instruction %>% 
+        group_by(month, year) %>%
+        count(month)
       
       #make sure each date occurs at lesat once so axes work well
-      daily_data <- all_daily_dates(daily_data)
+      #daily_data <- all_daily_dates(daily_data)
       
       #plot
       fig2 <- ggplotly(
-        daily_data %>% 
-          ggplot(aes(x = month_day, y = n, fill = year)) +
+        monthly_data %>% 
+          ggplot(aes(x = month, y = n, fill = year)) +
           geom_bar(stat= 'identity') +
           my_ggtheme + #custom theme
-          ggtitle("Daily Instruction Events")+
+          ggtitle("Monthly Instruction Events")+
           labs(x = NULL, y = "Number of Instruction Events") +
-          scale_x_discrete(breaks = month_2, 
-                           labels = month_label)
+          scale_x_continuous(breaks = c(1:12), labels = month_label)
       )%>%
         config(displaylogo = FALSE) %>%
         config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
@@ -832,8 +828,7 @@ shinyServer(function(input, output,session) {
         ggtitle("Weekly People Instructed") +
         labs(x = NULL, y = "People Instructed") +
         my_ggtheme + #custom theme
-        scale_x_continuous(breaks = month_numeric, 
-                           labels = month_label)
+        scale_x_continuous(breaks = month_numeric, labels = month_label)
       
     )%>%
       config(displaylogo = FALSE) %>%
@@ -885,9 +880,7 @@ shinyServer(function(input, output,session) {
     
     #get the selected quarter
     q <- input$quarter
-    
-    title <- paste("Services per week of the Quarter (",
-                   q," Quarter)", sep = '')
+    title <- paste("Services per week of the Quarter (", q," Quarter)", sep = '')
     
     fig <- ggplotly(
       weekly_data[!is.na(weekly_data$year),] %>% 
@@ -897,7 +890,7 @@ shinyServer(function(input, output,session) {
         xlim(0,11) +
         labs(y = "Number of Services", x = "Week") +
         my_ggtheme + #custom theme
-        scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8,9,10,11))
+        scale_x_continuous(breaks = c(0:11))
     ) %>%
       config(displaylogo = FALSE) %>%
       config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
@@ -935,8 +928,7 @@ shinyServer(function(input, output,session) {
           ggtitle("Weekly Research Assistance / Info Desk Services") +
           labs(x = NULL, y = "Number of Services") +
           my_ggtheme + #custom theme
-          scale_x_continuous(breaks = month_numeric, 
-                             labels = month_label)
+          scale_x_continuous(breaks = month_numeric, labels = month_label)
       ) %>%
         config(displaylogo = FALSE) %>%
         config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d",
@@ -945,26 +937,26 @@ shinyServer(function(input, output,session) {
       
       return(fig1)
       
-    } else if (user_info_scale == "Daily"){
+    } else if (user_info_scale == "Monthly"){
       
-      #aggregate daily
-      daily_data <- info %>% group_by(month_day, year) %>%
-        count(month_day)
+      #aggregate 
+      monthly_data <- info %>% 
+        group_by(month, year) %>%
+        count(month)
       
       #make sure each date occurs at least once so axes work well
-      daily_data <- all_daily_dates(daily_data)
+      #monthly_data <- all_daily_dates(daily_data)
       
       #plot
       #plot
       fig2 <- ggplotly(
-        daily_data %>% 
-          ggplot(aes(x = month_day, y = n, fill = year)) +
+        monthly_data %>% 
+          ggplot(aes(x = month, y = n, fill = year)) +
           geom_bar(stat= 'identity') +
           my_ggtheme + #custom theme
           labs(x = NULL, y = "Number of Services") +
-          ggtitle("Daily RAD/info Desk Services") +
-          scale_x_discrete(breaks = month_2, 
-                           labels = month_label)
+          ggtitle("Monthly RAD/info Desk Services") +
+          scale_x_continuous(breaks = c(1:12), labels = month_label)
       ) %>%
         config(displaylogo = FALSE) %>%
         config(modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d","zoom2d",
@@ -992,7 +984,7 @@ shinyServer(function(input, output,session) {
         xlim(0,11) +
         labs(y = "Number of Lab Visits", x = "Week") +
         my_ggtheme + #custom theme
-        scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8,9,10,11))
+        scale_x_continuous(breaks = c(0:11))
     ) %>% config(displaylogo = FALSE) %>%
       layout(xaxis=list(fixedrange=TRUE)) %>%
       layout(yaxis=list(fixedrange=TRUE)) %>% 
@@ -1033,8 +1025,7 @@ shinyServer(function(input, output,session) {
         ggtitle("Weekly Data & GIS Lab Visits") +
         labs(x = NULL, y = "Number of Lab Visits") +
         my_ggtheme + #custom theme
-        scale_x_continuous(breaks = month_numeric, 
-                           labels = month_label)
+        scale_x_continuous(breaks = month_numeric, labels = month_label)
     ) %>%
       config(displaylogo = FALSE) %>%
       layout(xaxis=list(fixedrange=TRUE)) %>%
