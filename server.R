@@ -48,191 +48,135 @@ shinyServer(function(input, output,session) {
   
   #clean instruction data, return data frame
   Sortie_instruction <- reactive({
-    
-    #read in the user data
-    user_data <- Sortie_master()
-    
-    if (is.null(user_data))
+    if (is.null(Sortie_master()))
       return(NULL)
-    
-    #now clean data for instruction_data
-    instruction <- user_data %>% 
+    #else clean the data
+    instruction_names <- #these will be new colnames
+      c("entered_by","service","date","format","activity", "home_program", 
+        "co_instructors","num_attendants","sessions_in_person", "sessions_online")
+    instruction <- 
+      Sortie_master() %>%
       select(Q2, Q3, Q16, Q192.1, Q17, Q14, Q15, Q21, Q197_1, Q197_2) %>%
-      filter(Q3 == "Instruction")
-    colnames(instruction) <- c("entered_by","service","date","format",
-                               "activity", "home_program", "co_instructors",
-                               "num_attendants","sessions_in_person",
-                               "sessions_online")
-    
-    #check that there are nonzero number of rows
-    if(nrow(instruction) == 0){
-      return(NULL)
-    }
-    #make num_attendants numeric
-    instruction$num_attendants <- as.numeric(instruction$num_attendants)
-    #ensure date data type
-    instruction$date <- mdy(instruction$date)
-    #week and quarter
-    instruction$week <- isoweek(instruction$date)
-    instruction <- instruction %>% relocate(week, .after = date)
-    #month
-    instruction$month <- month(instruction$date)
-    #get year
-    instruction$year <- format(instruction$date,format =  '%Y')
-    #date stuff 
-    instruction <- instruction %>%
+      filter(Q3 == "Instruction") %>% 
+      rename(!!!setNames(names(.), instruction_names)) %>% 
+      mutate(
+        num_attendants = as.numeric(num_attendants),
+        date = mdy(date),
+        week = isoweek(date),
+        month = month(date),
+        year = format(date, format =  '%Y'),
+        sessions_in_person = as.numeric(sessions_in_person),
+        sessions_online = as.numeric(sessions_online)
+      ) %>% relocate(week, .after = date) %>%
       clean_years() %>%
       week_to_quarter() %>%
       week_of_quarter() %>%
-      month_day()
-    #total sessions
-    instruction$sessions_in_person <- as.numeric(instruction$sessions_in_person)
-    instruction$sessions_online <- as.numeric(instruction$sessions_online)
-    instruction$sessions_in_person[is.na(instruction$sessions_in_person)] <- 0
-    instruction$sessions_online[is.na(instruction$sessions_online)] <- 0
-    instruction$sessions_total <- instruction$sessions_in_person + instruction$sessions_online
-    instruction <- instruction %>% relocate(sessions_total, .after = sessions_online)
-    #filter to selected quarter
-    instruction <- filter_Sortie(df = instruction, qtr = input$quarter, yr = input$year)
+      month_day() %>% 
+      rowwise() %>% #to allow for summing by row
+      mutate(sessions_total = sum(sessions_in_person, sessions_online, na.rm = T)) %>%
+      ungroup() %>% #ungroup by rows
+      relocate(sessions_total, .after = sessions_online) %>%
+      filter_Sortie(qtr = input$quarter, yr = input$year) #filter to selected year/quarter
     return(instruction)
   })
   
   #clean outreach data, return data frame
   Sortie_outreach <- reactive({
-   
-     #read in the user data
-    user_data <- Sortie_master()
-    
-    if (is.null(user_data))
+    if (is.null(Sortie_master()))
       return(NULL)
-    
-    #now clean data for outreach_data
-    outreach <- user_data %>% 
+    outreach_names <- 
+      c("entered_by","service","date","type","home_program","topic","collaborators",
+        "attendees","status","duration","time_prep","outcome1","outcome2","outcome3",
+        "outcome4","assessment")
+    outreach <- Sortie_master() %>%
       select(Q2,Q3, Q156, Q198, Q174, Q182, Q170 ,Q184,Q194, Q202, 
              Q196,Q178, Q178_5_TEXT, Q180, Q180_5_TEXT, Q168) %>%
-      filter(Q3 == "Outreach")
-    colnames(outreach) <- c("entered_by","service","date","type","home_program",
-                            "topic","collaborators","attendees","status",
-                            "duration","time_prep","outcome1","outcome2",
-                            "outcome3","outcome4","assessment")
-    #check that there are nonzero number of rows
-    if(nrow(outreach) == 0){
-      return(NULL)
-    }
-    #drop empty obs 
-    outreach <- outreach %>%
-      filter(!is.na(date)) %>%
-      filter(date != "")
-    #ensure date data type
-    outreach$date <- mdy(outreach$date)
-    #make attendees numeric
-    outreach$attendees <- as.numeric(outreach$attendees)
-    #get week of year, year, quarter
-    outreach$week <- isoweek(outreach$date)
-    outreach <- outreach %>% relocate(week, .after = date)
-    #get year
-    outreach$year <- format(outreach$date,format =  '%Y')
-    #dates and stuff
-    outreach <- outreach %>%
+      filter(Q3 == "Outreach") %>%
+      rename(!!!setNames(names(.), outreach_names)) %>%
+      filter(!is.na(date)) %>%#empty obs checking
+      filter(date != "") %>% #empty obs checking
+      mutate(
+        date = mdy(date),
+        attendees = as.numeric(attendees),
+        week = isoweek(date),
+        year = format(date,format =  '%Y')
+      ) %>% 
+      relocate(week, .after = date) %>%
       clean_years() %>%
       week_to_quarter() %>%
       week_of_quarter() %>%
-      month_day()
-  
-    outreach <- filter_Sortie(df = outreach, qtr = input$quarter, yr = input$year)
+      month_day()%>%
+      filter_Sortie(qtr = input$quarter, yr = input$year)
     return(outreach)
   })
   
   #clean consults data, return data frame
   Sortie_consults <- reactive({
-    
-    #read in the user data
-    user_data <- Sortie_master()
-    
-    if (is.null(user_data))
+    if (is.null(Sortie_master()))
       return(NULL)
-    
-    #now clean data for consults_data
-    consults <- user_data %>% 
+    #else clean data
+    cons_names <- 
+      c("entered_by","service","date","location","department", "num_consult",
+        "category","time_spent","status","comm")
+    consults <- Sortie_master() %>%
       select(Q2,Q3,Q38,Q39,Q40,Q42,Q43,Q44,Q45,Q92) %>%
-      filter(Q3 == "Consultation")
-    colnames(consults) <- c("entered_by","service","date","location",
-                            "department", "num_consult","category",
-                            "time_spent","status","comm")
-    #check that there are nonzero number of rows
-    if(nrow(consults) == 0){
-      return(NULL)
-    }
-    #ensure date class
-    consults$date <- mdy(consults$date)
-    #make num_consult numeric
-    consults$num_consult <- as.numeric(consults$num_consult)
-    #some NAs, lets make these 1 by default
-    consults$num_consult[is.na(consults$num_consult)] <- 1
-    #make time spent numeric
-    consults$time_spent[consults$time_spent == "greater than 10"] <- '10'
-    consults$time_spent <- as.numeric(consults$time_spent)
-    consults$time_spent[is.na(consults$time_spent)] <- 0
-    #add week of year,quarters(works for 2021 and 2020, need to check for other)
-    consults$week <- isoweek(consults$date)
-    consults <- consults %>% relocate(week, .before = location)
-    #month
-    consults$month <- month(consults$date)
-    #get year
-    consults$year <- format(consults$date,format =  '%Y')
-    #date stuff
-    consults <- consults %>%
-      clean_years() %>%
+      filter(Q3 == "Consultation") %>%
+      rename(!!!setNames(names(.), cons_names)) %>%
+      mutate(
+        date = mdy(date),
+        week = isoweek(date),
+        month = month(date),
+        year = format(date, format =  '%Y'),
+        num_consult = case_when(
+          is.na(num_consult) ~ 1,
+          TRUE ~ as.numeric(num_consult)
+        ),
+        time_spent = case_when(
+          time_spent == "greater than 10" ~ 10,
+          TRUE ~ as.numeric(time_spent)
+        ),
+        fuzzy_department = fuzzy_match(department)
+      ) %>% clean_years() %>%
       week_to_quarter() %>%
       week_of_quarter() %>%
-      month_day()
-    ## fuzzy match department names
-    consults$fuzzy_department <- fuzzy_match(consults$department)
-    consults <- consults %>% relocate(fuzzy_department, .after = department)
-    #filter to selected quarter
-    consults <- filter_Sortie(df = consults, qtr = input$quarter, yr = input$year)
-    #generate counts for each department
-    consults <- consults %>% group_by(department) %>%
-      mutate(dept_consult_count = n())
+      month_day() %>%
+      relocate(fuzzy_department, .after = department) %>% 
+      relocate(week, .before = location) %>% 
+      #filter before doing counts!!!!!
+      filter_Sortie(qtr = input$quarter, yr = input$year) %>%
+      group_by(department) %>%
+      mutate(total_dept_consult_count = n()) %>%
+      ungroup() %>%
+      group_by(fuzzy_department) %>%
+      mutate(total_fuzzy_dept_count = n()) %>%
+      ungroup() 
     return(consults)
   })
   
   Sortie_info_RAD <- reactive({
-    #read in the user data
-    user_data <- Sortie_master()
-    if (is.null(user_data)){
+    if (is.null(Sortie_master())){
       return(NULL)
     }
     #now clean for info/RAD data
-    info <- user_data %>%
+    info <- Sortie_master() %>%
       select(RecordedDate,Q2,Q26,Q27,Q31) %>%
-      filter(Q2 %in% c("RAD","Info Desk"))
-      
-    if(nrow(info) == 0){ #check needed here as well as at the end
-      return(NULL)
-    }
-    #merge columns 27 and 31 into new column
-    info$pasted <- paste(info$Q27,info$Q31, sep = "")
-    #date time conversion
-    info$date_time <- 
-      as.POSIXct(info$RecordedDate, format = "%m/%d/%Y %H:%M", tz = "America/Los_Angeles")
-    #extract year and week
-    info$year <-  format(info$date_time,format =  '%Y')
-    info$week <- isoweek(info$date_time)
-    #select down to the rows we want, and rename cols
-    info <- info %>% select(c("year","week","date_time","Q2","pasted"))
-    colnames(info) <- c("year","week","date_time","desk","service")
-    #dates stuff
-    info <- info %>%
+      filter(Q2 %in% c("RAD","Info Desk")) %>%
+      mutate(
+        service = paste(Q27,Q31, sep = ""),
+        date_time = as.POSIXct(RecordedDate, format = "%m/%d/%Y %H:%M", tz = "America/Los_Angeles"),
+        year =  format(date_time,format =  '%Y'),
+        week = isoweek(date_time),
+        desk = Q2,
+      ) %>% 
+      select(year,week,date_time,desk,service) %>%
       week_to_quarter() %>%
       week_of_quarter() %>%
-      month_day()
-    #month
-    info$month <- month(info$date)
-    #filter to selected quarter
-    info <- filter_Sortie(df = info, qtr = input$quarter, yr = input$year)
-    #clean services
-    info$service <- clean_desk_service(info$service)
+      month_day() %>%
+      mutate(
+        month = month(date_time),
+        service = clean_desk_service(service)
+      ) %>%
+      filter_Sortie(qtr = input$quarter, yr = input$year)
     return(info)
   })
   
