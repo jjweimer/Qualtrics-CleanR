@@ -181,15 +181,11 @@ shinyServer(function(input, output,session) {
   })
   
   Sortie_data_gis <- reactive({
-    
-    #read in the user data
-    user_data <- Sortie_master()
-    
-    if (is.null(user_data))
+    if (is.null(Sortie_master()))
       return(NULL)
     
     #select the columns/rows we need
-    gis_lab <- user_data %>%
+    gis_lab <- Sortie_master() %>%
       select(RecordedDate,Q2,Q49,Q50,Q51,Q52,Q53,Q89,Q90) %>%
       filter(Q2 == "Data/GIS Lab")
     #check that there are nonzero number of rows
@@ -217,7 +213,7 @@ shinyServer(function(input, output,session) {
       week_to_quarter() %>%
       week_of_quarter() %>%
       month_day()
-  
+    
     ## fuzzy match department names
     gis_lab$fuzzy_department <- fuzzy_match(gis_lab$department)
     gis_lab <- gis_lab %>% relocate(fuzzy_department, .after = department)
