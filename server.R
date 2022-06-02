@@ -793,7 +793,7 @@ shinyServer(function(input, output,session) {
         geom_col( fill = "#00629B") +
         my_ggtheme +
         labs(y = "Communication Activity", x = "n") +
-        ggtitle("Communication Activity Counts") 
+        ggtitle("Scholarly Communication Activity Counts") 
       fig <- ggplotly(fig, tooltip = "n") %>%
         config(displayModeBar = FALSE) %>%
         layout(xaxis=list(fixedrange=TRUE)) %>%
