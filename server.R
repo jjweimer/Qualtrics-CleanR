@@ -53,10 +53,10 @@ shinyServer(function(input, output,session) {
     #else clean the data
     instruction_names <- #these will be new colnames
       c("entered_by","service","date","format","activity", "home_program", 
-        "co_instructors","num_attendants","sessions_in_person", "sessions_online")
+        "co_instructors","num_attendants","n_sessions")
     instruction <- 
       Sortie_master() %>%
-      select(Q2, Q3, Q16, Q192.1, Q17, Q14, Q15, Q21, Q197_1, Q197_2) %>%
+      select(Q2, Q3, Q16, Q192, Q17, Q14, Q15, Q21, Q191) %>%
       filter(Q3 == "Instruction") %>% 
       rename(!!!setNames(names(.), instruction_names)) %>% 
       mutate(
@@ -65,17 +65,18 @@ shinyServer(function(input, output,session) {
         week = isoweek(date),
         month = month(date),
         year = format(date, format =  '%Y'),
-        sessions_in_person = as.numeric(sessions_in_person),
-        sessions_online = as.numeric(sessions_online)
+        n_sessions = as.numeric(n_sessions)
+        #sessions_in_person = as.numeric(sessions_in_person),
+        #sessions_online = as.numeric(sessions_online)
       ) %>% relocate(week, .after = date) %>%
       clean_years() %>%
       week_to_quarter() %>%
       week_of_quarter() %>%
       month_day() %>% 
-      rowwise() %>% #to allow for summing by row
-      mutate(sessions_total = sum(sessions_in_person, sessions_online, na.rm = T)) %>%
-      ungroup() %>% #ungroup by rows
-      relocate(sessions_total, .after = sessions_online) %>%
+      #rowwise() %>% #to allow for summing by row
+      #mutate(sessions_total = sum(sessions_in_person, sessions_online, na.rm = T)) %>%
+      #ungroup() %>% #ungroup by rows
+      #relocate(sessions_total, .after = sessions_online) %>%
       filter_Sortie(qtr = input$quarter, yr = input$year) #filter to selected year/quarter
     return(instruction)
   })
@@ -85,12 +86,10 @@ shinyServer(function(input, output,session) {
     if (is.null(Sortie_master()))
       return(NULL)
     outreach_names <- 
-      c("entered_by","service","date","type","home_program","topic","collaborators",
-        "attendees","status","duration","time_prep","outcome1","outcome2","outcome3",
-        "outcome4","assessment")
+      c("entered_by","service","date","type","home_program","collaborators",
+        "attendees","status","duration","outcome1","outcome2")
     outreach <- Sortie_master() %>%
-      select(Q2,Q3, Q156, Q198, Q174, Q182, Q170 ,Q184,Q194, Q202, 
-             Q196,Q178, Q178_5_TEXT, Q180, Q180_5_TEXT, Q168) %>%
+      select(Q2,Q3, Q156, Q198, Q174, Q170 ,Q184,Q194, Q202, Q180, Q180_5_TEXT) %>%
       filter(Q3 == "Outreach") %>%
       rename(!!!setNames(names(.), outreach_names)) %>%
       filter(!is.na(date)) %>%#empty obs checking
@@ -163,7 +162,7 @@ shinyServer(function(input, output,session) {
       filter(Q2 %in% c("RAD","Info Desk")) %>%
       mutate(
         service = paste(Q27,Q31, sep = ""),
-        date_time = as.POSIXct(RecordedDate, format = "%m/%d/%Y %H:%M", tz = "America/Los_Angeles"),
+        date_time = as.POSIXct(RecordedDate, format = "%Y-%m-%d %H:%M:%S"),
         year =  format(date_time,format =  '%Y'),
         week = isoweek(date_time),
         desk = Q2,
@@ -197,12 +196,12 @@ shinyServer(function(input, output,session) {
       c("RecordedDate","location","entry_type","user_status","department",
         "visit_purpose","question_type","date","hour")
     #convert RecordedDate to useful date-times
-    gis_lab$date_time <- 
-      as.POSIXct(gis_lab$RecordedDate,format = "%m/%d/%Y %H:%M",tz = "America/Los_Angeles")
+    gis_lab$RecordedDate <- 
+      as.POSIXct(gis_lab$RecordedDate,format = "%Y-%m-%d %H:%M:%S")
     
     #fill in missing "date" values with recordeddate
     gis_lab$date[is.na(gis_lab$date) | gis_lab$date == ""] <- 
-      format(gis_lab$date_time[is.na(gis_lab$date) | gis_lab$date == ""], format = "%m/%d/%Y")
+      format(gis_lab$RecordedDate[is.na(gis_lab$date) | gis_lab$date == ""], format = "%m/%d/%Y")
     #convert to date class
     gis_lab$date <- mdy(gis_lab$date)
     #extract year and week
